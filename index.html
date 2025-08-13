@@ -1,4 +1,10 @@
-.calendar-header<!DOCTYPE html>
+.calendar-view {
+            display: none;
+        }
+
+        .calendar-view.active {
+            display: block;
+        }        .calendar-header<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -208,33 +214,127 @@
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
-        .week-view, .agenda-view {
+        .week-view {
             display: none;
+            background: rgba(255, 255, 255, 0.7);
         }
 
-        .week-view.active, .agenda-view.active {
+        .week-view.active {
             display: block;
         }
 
-        .week-day {
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid rgba(214, 233, 240, 0.6);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 12px;
+        .week-header {
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr);
+            background: #f5f5f5;
+            border-bottom: 1px solid rgba(214, 233, 240, 0.6);
         }
 
-        .week-day-header {
-            font-size: 18px;
+        .week-header .time-column {
+            padding: 16px 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #5a7c89;
+            text-align: center;
+        }
+
+        .week-header .day-header {
+            padding: 16px 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #5a7c89;
+            text-align: center;
+            border-right: 1px solid rgba(214, 233, 240, 0.4);
+        }
+
+        .week-header .day-header:last-child {
+            border-right: none;
+        }
+
+        .week-grid {
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr);
+            min-height: 600px;
+        }
+
+        .week-time-column {
+            border-right: 1px solid rgba(214, 233, 240, 0.4);
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .week-time-slot {
+            height: 60px;
+            padding: 8px;
+            border-bottom: 1px solid rgba(214, 233, 240, 0.3);
+            font-size: 12px;
+            color: #5a7c89;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .week-day-column {
+            border-right: 1px solid rgba(214, 233, 240, 0.4);
+            background: rgba(255, 255, 255, 0.5);
+            position: relative;
+        }
+
+        .week-day-column:last-child {
+            border-right: none;
+        }
+
+        .week-day-column.today {
+            background: rgba(154, 205, 223, 0.2);
+        }
+
+        .week-time-slot-day {
+            height: 60px;
+            border-bottom: 1px solid rgba(214, 233, 240, 0.3);
+            padding: 4px;
+            position: relative;
+        }
+
+        .week-event {
+            background: rgba(154, 205, 223, 0.4);
+            color: #3a5a6b;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            cursor: pointer;
+            font-size: 11px;
+            border-left: 3px solid #6b9fc7;
+            transition: all 0.2s ease;
+        }
+
+        .week-event:hover {
+            background: rgba(154, 205, 223, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .week-event-time {
             font-weight: 600;
-            color: #4a6c79;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid rgba(214, 233, 240, 0.6);
+            font-size: 10px;
+            color: #2a4a5b;
+        }
+
+        .week-event-title {
+            font-weight: 500;
+            font-size: 10px;
+            color: #2a4a5b;
+        }
+
+        .agenda-view {
+            display: none;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 20px;
+        }
+
+        .agenda-view.active {
+            display: block;
         }
 
         .agenda-event {
-            background: linear-gradient(135deg, rgba(154, 205, 223, 0.7) 0%, rgba(174, 215, 228, 0.8) 100%);
+            background: rgba(154, 205, 223, 0.4);
             color: #3a5a6b;
             padding: 16px;
             border-radius: 8px;
@@ -246,9 +346,9 @@
         }
 
         .agenda-event:hover {
-            background: linear-gradient(135deg, rgba(154, 205, 223, 0.9) 0%, rgba(174, 215, 228, 1) 100%);
+            background: rgba(154, 205, 223, 0.6);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(107, 159, 199, 0.3);
+            box-shadow: 0 4px 12px rgba(107, 159, 199, 0.2);
         }
 
         .agenda-date {
@@ -438,66 +538,14 @@
         }
 
         .event-detail-value a {
-            color: #fff;
-            text-decoration: none;
-            font-weight: 600;
-            padding: 8px 16px;
-            background: linear-gradient(135deg, #6b9fc7 0%, #5a8fb0 100%);
-            border-radius: 25px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: inline-block;
-            margin: 4px 4px 4px 0;
-            box-shadow: 0 4px 15px rgba(107, 159, 199, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .event-detail-value a:before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
+            color: #3498db;
+            text-decoration: underline;
+            word-break: break-all;
         }
 
         .event-detail-value a:hover {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 6px 20px rgba(107, 159, 199, 0.4);
-            text-decoration: none;
-        }
-
-        .event-detail-value a:hover:before {
-            left: 100%;
-        }
-
-        .event-detail-value a[href*="zoom"] {
-            background: linear-gradient(135deg, #7bb3d9 0%, #6ba3c9 100%);
-            box-shadow: 0 4px 15px rgba(123, 179, 217, 0.3);
-        }
-
-        .event-detail-value a[href*="zoom"]:hover {
-            box-shadow: 0 6px 20px rgba(123, 179, 217, 0.4);
-        }
-
-        .event-detail-value a[href*="meet"] {
-            background: linear-gradient(135deg, #8dbdd6 0%, #7dacc5 100%);
-            box-shadow: 0 4px 15px rgba(141, 189, 214, 0.3);
-        }
-
-        .event-detail-value a[href*="meet"]:hover {
-            box-shadow: 0 6px 20px rgba(141, 189, 214, 0.4);
-        }
-
-        .event-detail-value a[href*="teams"] {
-            background: linear-gradient(135deg, #9ac5d6 0%, #8ab4c5 100%);
-            box-shadow: 0 4px 15px rgba(154, 197, 214, 0.3);
-        }
-
-        .event-detail-value a[href*="teams"]:hover {
-            box-shadow: 0 6px 20px rgba(154, 197, 214, 0.4);
+            color: #2980b9;
+            text-decoration: underline;
         }detail-value a:before {
             content: '';
             position: absolute;
@@ -715,8 +763,44 @@
         </div>
 
         <div id="weekView" class="week-view">
-            <div id="weekContainer">
-                <!-- 週表示がここに生成されます -->
+            <div class="week-header">
+                <div class="time-column">時間</div>
+                <div class="day-header" id="weekDay0">月</div>
+                <div class="day-header" id="weekDay1">火</div>
+                <div class="day-header" id="weekDay2">水</div>
+                <div class="day-header" id="weekDay3">木</div>
+                <div class="day-header" id="weekDay4">金</div>
+                <div class="day-header" id="weekDay5">土</div>
+                <div class="day-header" id="weekDay6">日</div>
+            </div>
+            <div class="week-grid">
+                <div class="week-time-column">
+                    <div class="week-time-slot">6:00</div>
+                    <div class="week-time-slot">7:00</div>
+                    <div class="week-time-slot">8:00</div>
+                    <div class="week-time-slot">9:00</div>
+                    <div class="week-time-slot">10:00</div>
+                    <div class="week-time-slot">11:00</div>
+                    <div class="week-time-slot">12:00</div>
+                    <div class="week-time-slot">13:00</div>
+                    <div class="week-time-slot">14:00</div>
+                    <div class="week-time-slot">15:00</div>
+                    <div class="week-time-slot">16:00</div>
+                    <div class="week-time-slot">17:00</div>
+                    <div class="week-time-slot">18:00</div>
+                    <div class="week-time-slot">19:00</div>
+                    <div class="week-time-slot">20:00</div>
+                    <div class="week-time-slot">21:00</div>
+                    <div class="week-time-slot">22:00</div>
+                    <div class="week-time-slot">23:00</div>
+                </div>
+                <div class="week-day-column" id="weekColumn0"></div>
+                <div class="week-day-column" id="weekColumn1"></div>
+                <div class="week-day-column" id="weekColumn2"></div>
+                <div class="week-day-column" id="weekColumn3"></div>
+                <div class="week-day-column" id="weekColumn4"></div>
+                <div class="week-day-column" id="weekColumn5"></div>
+                <div class="week-day-column" id="weekColumn6"></div>
             </div>
         </div>
 
@@ -920,31 +1004,104 @@
 
         // 週表示を生成
         function generateWeekView() {
-            const container = document.getElementById('weekContainer');
-            container.innerHTML = '';
-
             const startOfWeek = getStartOfWeek(currentDate);
+            const today = new Date();
 
+            // 週のヘッダーを更新
             for (let i = 0; i < 7; i++) {
                 const day = new Date(startOfWeek);
                 day.setDate(startOfWeek.getDate() + i);
-
-                const dayDiv = document.createElement('div');
-                dayDiv.className = 'week-day';
-
-                const header = document.createElement('div');
-                header.className = 'week-day-header';
-                header.textContent = `${day.getDate()}日 (${dayNames[i]})`;
-                dayDiv.appendChild(header);
-
+                
+                const dayHeader = document.getElementById(`weekDay${i}`);
+                const dayColumn = document.getElementById(`weekColumn${i}`);
+                
+                dayHeader.textContent = `${dayNames[i]} ${day.getDate()}`;
+                
+                // 今日の列をハイライト
+                if (isSameDay(day, today)) {
+                    dayColumn.classList.add('today');
+                } else {
+                    dayColumn.classList.remove('today');
+                }
+                
+                // 列をクリア
+                dayColumn.innerHTML = '';
+                
+                // 18時間分のタイムスロットを作成
+                for (let hour = 6; hour < 24; hour++) {
+                    const timeSlot = document.createElement('div');
+                    timeSlot.className = 'week-time-slot-day';
+                    dayColumn.appendChild(timeSlot);
+                }
+                
+                // その日のイベントを取得して配置
                 const dayEvents = getEventsForDate(day);
                 dayEvents.forEach(event => {
-                    const eventDiv = createEventElement(event, 'week');
-                    dayDiv.appendChild(eventDiv);
+                    const eventElement = createWeekEventElement(event);
+                    if (eventElement) {
+                        // イベントの時間に基づいて配置を計算
+                        const startTime = new Date(event.start.dateTime || event.start.date);
+                        if (event.start.dateTime) {
+                            const hour = startTime.getHours();
+                            if (hour >= 6 && hour < 24) {
+                                const slotIndex = hour - 6;
+                                const targetSlot = dayColumn.children[slotIndex];
+                                if (targetSlot) {
+                                    targetSlot.appendChild(eventElement);
+                                }
+                            }
+                        } else {
+                            // 終日イベントは最初のスロットに配置
+                            if (dayColumn.children[0]) {
+                                dayColumn.children[0].appendChild(eventElement);
+                            }
+                        }
+                    }
                 });
-
-                container.appendChild(dayDiv);
             }
+        }
+
+        // 週表示用のイベント要素を作成
+        function createWeekEventElement(event) {
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'week-event';
+
+            const startTime = new Date(event.start.dateTime || event.start.date);
+            
+            let timeStr = '';
+            if (event.start.dateTime) {
+                timeStr = formatTime(startTime);
+            } else {
+                timeStr = '終日';
+            }
+
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'week-event-time';
+            timeSpan.textContent = timeStr;
+
+            const titleSpan = document.createElement('span');
+            titleSpan.className = 'week-event-title';
+            
+            let title = event.summary || '無題';
+            title = title.split('\n')[0];
+            
+            if (title.length > 15) {
+                titleSpan.textContent = title.substring(0, 15) + '...';
+            } else {
+                titleSpan.textContent = title;
+            }
+
+            eventDiv.appendChild(timeSpan);
+            eventDiv.appendChild(document.createElement('br'));
+            eventDiv.appendChild(titleSpan);
+
+            // イベントクリックで詳細表示
+            eventDiv.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showEventModal(event);
+            });
+
+            return eventDiv;
         }
 
         // 予定表示を生成
@@ -1103,11 +1260,12 @@
             });
             event.target.classList.add('active');
 
-            // ビューを切り替え
+            // すべてのビューを非表示
             document.querySelectorAll('.calendar-view, .week-view, .agenda-view').forEach(div => {
                 div.classList.remove('active');
             });
 
+            // 選択されたビューを表示
             if (view === 'month') {
                 document.getElementById('monthView').classList.add('active');
             } else if (view === 'week') {
@@ -1214,8 +1372,7 @@
                 const videoLinks = event.conferenceData.entryPoints
                     .filter(entry => entry.entryPointType === 'video')
                     .map(entry => {
-                        const platform = detectPlatform(entry.uri);
-                        return `<a href="${entry.uri}" target="_blank" rel="noopener noreferrer">${platform}会議に参加</a>`;
+                        return `<a href="${entry.uri}" target="_blank" rel="noopener noreferrer">${entry.uri}</a>`;
                     })
                     .join('<br>');
                 
@@ -1241,7 +1398,7 @@
 
             // Google Calendar リンク
             if (event.htmlLink) {
-                addDetailItem('🔗', 'Google Calendar', `<a href="${event.htmlLink}" target="_blank" class="event-detail-link">カレンダーで開く</a>`, true);
+                addDetailItem('🔗', 'Google Calendar', `<a href="${event.htmlLink}" target="_blank">${event.htmlLink}</a>`, true);
             }
 
             // 作成者
@@ -1262,9 +1419,7 @@
             // URLパターンを検出してリンクに変換
             const urlPattern = /(https?:\/\/[^\s<>"\[\]{}|\\^`]+)/gi;
             html = html.replace(urlPattern, (url) => {
-                const platform = detectPlatform(url);
-                const displayText = getDisplayText(url, platform);
-                return `<a href="${url}" target="_blank" rel="noopener noreferrer">${displayText}</a>`;
+                return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
             });
             
             return html;
