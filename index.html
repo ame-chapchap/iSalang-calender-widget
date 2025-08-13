@@ -271,18 +271,8 @@
                 'agenda': 'AGENDA'
             };
             
-            // スマホの月表示では、タイトルが見えるように週表示を使用
-            let displayMode = modeMap[currentView];
-            let extraParams = '';
-            
-            if (isMobile() && currentView === 'month') {
-                // スマホの場合、月表示でもタイトルを表示するため週表示を使用
-                displayMode = 'WEEK';
-                extraParams = '&dates=7'; // 1週間表示
-            }
-            
             // 新しいURLを構築
-            const newSrc = baseCalendarUrl + '&mode=' + displayMode + extraParams;
+            const newSrc = baseCalendarUrl + '&mode=' + modeMap[currentView];
             
             // iframeのsrcを更新
             iframe.src = newSrc;
