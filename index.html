@@ -20,8 +20,8 @@
 
         .calendar-container {
             width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
+            max-width: none;
+            margin: 0;
             padding: 16px;
         }
 
@@ -212,9 +212,9 @@
                 <span>カレンダー</span>
             </h1>
             <div class="view-toggle">
-                <button class="view-btn active" onclick="switchView('month')" title="月表示">月</button>
+                <button class="view-btn" onclick="switchView('month')" title="月表示">月</button>
                 <button class="view-btn" onclick="switchView('week')" title="週表示">週</button>
-                <button class="view-btn" onclick="switchView('agenda')" title="予定一覧">予定</button>
+                <button class="view-btn active" onclick="switchView('agenda')" title="予定一覧">予定</button>
             </div>
         </div>
 
@@ -224,7 +224,7 @@
             </div>
             <iframe id="calendar-iframe" 
                     class="calendar-iframe"
-                    src="https://calendar.google.com/calendar/embed?height=650&wkst=2&bgcolor=%23ffffff&ctz=Asia%2FTokyo&src=isalang.2ain%40gmail.com&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&mode=MONTH"
+                    src="https://calendar.google.com/calendar/embed?height=650&wkst=2&bgcolor=%23ffffff&ctz=Asia%2FTokyo&src=isalang.2ain%40gmail.com&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&mode=AGENDA"
                     scrolling="no"
                     onload="hideLoading()">
             </iframe>
@@ -232,8 +232,13 @@
     </div>
 
     <script>
-        let currentView = 'month';
+        let currentView = 'agenda';
         const baseCalendarUrl = 'https://calendar.google.com/calendar/embed?height=650&wkst=2&bgcolor=%23ffffff&ctz=Asia%2FTokyo&src=isalang.2ain%40gmail.com&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0';
+        
+        // デバイス判定
+        function isMobile() {
+            return window.innerWidth <= 768;
+        }
 
         function switchView(view) {
             currentView = view;
