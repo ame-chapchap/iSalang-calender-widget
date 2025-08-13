@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Googleカレンダーウィジェット</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #ffffff;
+            color: #37352f;
+            line-height: 1.5;
+        }
+
+        .calendar-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .calendar-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #37352f;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: #f7f6f3;
+            border-radius: 6px;
+            padding: 2px;
+            gap: 2px;
+        }
+
+        .view-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .view-btn.active {
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            color: #37352f;
+        }
+
+        .calendar-frame {
+            width: 100%;
+            border: 1px solid #e9e7e4;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background: #ffffff;
+        }
+
+        .calendar-iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+            display: block;
+        }
+
+        .setup-instructions {
+            margin-top: 20px;
+            padding: 16px;
+            background: #f7f6f3;
+            border-radius: 8px;
+            border-left: 4px solid #2eaadc;
+        }
+
+        .setup-instructions h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #37352f;
+        }
+
+        .setup-instructions ol {
+            margin-left: 16px;
+            color: #6b6866;
+        }
+
+        .setup-instructions li {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .calendar-url-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e9e7e4;
+            border-radius: 6px;
+            font-size: 14px;
+            margin: 12px 0;
+            font-family: 'SF Mono', Monaco, Consolas, monospace;
+            background: #ffffff;
+        }
+
+        .update-btn {
+            background: #2eaadc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: background 0.2s ease;
+        }
+
+        .update-btn:hover {
+            background: #2596be;
+        }
+
+        /* モバイル対応 */
+        @media (max-width: 768px) {
+            .calendar-container {
+                padding: 12px;
+            }
+
+            .calendar-title {
+                font-size: 20px;
+            }
+
+            .calendar-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .view-toggle {
+                justify-content: center;
+            }
+
+            .view-btn {
+                flex: 1;
+                text-align: center;
+            }
+
+            .calendar-iframe {
+                height: 500px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .calendar-iframe {
+                height: 450px;
+            }
+            
+            .setup-instructions {
+                padding: 12px;
+            }
+        }
+
+        /* Notion内での表示最適化 */
+        @media (max-width: 400px) {
+            .calendar-container {
+                padding: 8px;
+            }
+            
+            .calendar-iframe {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <h1 class="calendar-title">📅 カレンダー</h1>
+            <div class="view-toggle">
+                <button class="view-btn active" onclick="switchView('month')">月表示</button>
+                <button class="view-btn" onclick="switchView('week')">週表示</button>
+                <button class="view-btn" onclick="switchView('agenda')">予定一覧</button>
+            </div>
+        </div>
+
+        <div class="calendar-frame">
+            <iframe id="calendar-iframe" class="calendar-iframe"
+                src="https://calendar.google.com/calendar/embed?height=600&wkst=1&bgcolor=%23ffffff&ctz=Asia%2FTokyo&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&mode=MONTH"
+                scrolling="no">
+            </iframe>
+        </div>
+
+        <div class="setup-instructions">
+            <h3>🔧 セットアップ方法</h3>
+            <ol>
+                <li>Googleカレンダーを開いて、共有したいカレンダーの設定へ</li>
+                <li>「統合カレンダー」→「埋め込みコード」をコピー</li>
+                <li>下の入力欄にsrc="..."の部分のURLを貼り付け</li>
+                <li>「更新」ボタンをクリック</li>
+                <li>このページ全体をNotionにEmbedとして貼り付け</li>
+            </ol>
+            
+            <input type="text" 
+                   id="calendar-url" 
+                   class="calendar-url-input"
+                   placeholder="https://calendar.google.com/calendar/embed?src=your-calendar-url"
+                   value="">
+            
+            <button class="update-btn" onclick="updateCalendar()">📅 カレンダーを更新</button>
+        </div>
+    </div>
+
+    <script>
+        let currentView = 'month';
+        let baseUrl = '';
+
+        function switchView(view) {
+            currentView = view;
+            
+            // ボタンのアクティブ状態を更新
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // カレンダー表示を更新
+            updateCalendarView();
+        }
+
+        function updateCalendarView() {
+            const iframe = document.getElementById('calendar-iframe');
+            const currentSrc = iframe.src;
+            
+            // 現在のURLから基本部分を抽出
+            let newSrc = currentSrc.replace(/&mode=(MONTH|WEEK|AGENDA)/, '');
+            
+            // 新しい表示モードを追加
+            const modeMap = {
+                'month': 'MONTH',
+                'week': 'WEEK', 
+                'agenda': 'AGENDA'
+            };
+            
+            newSrc += '&mode=' + modeMap[currentView];
+            iframe.src = newSrc;
+        }
+
+        function updateCalendar() {
+            const urlInput = document.getElementById('calendar-url');
+            const newUrl = urlInput.value.trim();
+            
+            if (!newUrl) {
+                alert('カレンダーURLを入力してください');
+                return;
+            }
+            
+            if (!newUrl.includes('calendar.google.com')) {
+                alert('GoogleカレンダーのURLを入力してください');
+                return;
+            }
+            
+            // URLをクリーンアップして埋め込み用に最適化
+            let embedUrl = newUrl;
+            
+            // 必要なパラメータを追加・調整
+            if (!embedUrl.includes('showTitle=0')) {
+                embedUrl += embedUrl.includes('?') ? '&showTitle=0' : '?showTitle=0';
+            }
+            if (!embedUrl.includes('showNav=1')) {
+                embedUrl += '&showNav=1';
+            }
+            if (!embedUrl.includes('showDate=1')) {
+                embedUrl += '&showDate=1';
+            }
+            if (!embedUrl.includes('showPrint=0')) {
+                embedUrl += '&showPrint=0';
+            }
+            if (!embedUrl.includes('showTabs=0')) {
+                embedUrl += '&showTabs=0';
+            }
+            if (!embedUrl.includes('showCalendars=0')) {
+                embedUrl += '&showCalendars=0';
+            }
+            
+            // 表示モードを現在の選択に合わせる
+            const modeMap = {
+                'month': 'MONTH',
+                'week': 'WEEK',
+                'agenda': 'AGENDA'
+            };
+            
+            embedUrl = embedUrl.replace(/&mode=(MONTH|WEEK|AGENDA)/, '');
+            embedUrl += '&mode=' + modeMap[currentView];
+            
+            // iframeを更新
+            document.getElementById('calendar-iframe').src = embedUrl;
+            baseUrl = embedUrl;
+            
+            alert('カレンダーが更新されました！');
+        }
+
+        // ページロード時の初期設定
+        window.addEventListener('load', function() {
+            // デフォルトでデモ用のパブリックカレンダーを表示
+            // 実際の使用時は削除して、ユーザーのカレンダーURLに置き換え
+        });
+    </script>
+</body>
+</html>
