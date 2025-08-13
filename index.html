@@ -891,6 +891,88 @@ body{
     padding-right: 10px;
   }
 }
+/* ===== Week view polish ===== */
+
+/* 共通: ヘッダー固定＆今日の列をきれいに強調 */
+.week-header{
+  position: sticky;
+  top: 0;                 /* カレンダーヘッダーの直下に固定 */
+  z-index: 5;
+  backdrop-filter: blur(6px);
+  background: rgba(255,255,255,.85);
+  border-bottom: 1px solid rgba(214,233,240,.6);
+}
+
+/* スクロールできる時間エリア（高さを自動で算出） */
+.week-grid{
+  height: min(72vh, calc(100vh - 260px));
+  overflow-y: auto;
+  border-top: 1px solid rgba(214,233,240,.6);
+}
+
+/* 左の時間カラムを固定（縦スクロールしても見失わない） */
+.week-time-column{
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  background: rgba(255,255,255,.9);
+  backdrop-filter: blur(4px);
+}
+
+/* “今日”の縦帯を柔らかくハイライト（トークンに追従） */
+.week-day-column.today{
+  background: linear-gradient(180deg, rgba(134,197,184,.20), rgba(134,197,184,.08));
+  box-shadow: inset 0 0 0 2px var(--today-ring, #86C5B8);
+}
+
+/* イベントチップ（週ビュー）を月/予定と統一 */
+.week-event{
+  background: color-mix(in srgb, var(--event-bg, #7BAEF5) 24%, #ffffff 76%);
+  border-left: 4px solid var(--event-bg, #7BAEF5);
+  color: color-mix(in srgb, #2c3e50 88%, #000 12%);
+  border-radius: 8px;
+}
+.week-event:hover{ background: color-mix(in srgb, var(--event-bg, #7BAEF5) 38%, #ffffff 62%); }
+
+/* タイムスロットの高さを少し詰めて情報量UP */
+.week-time-slot, .week-time-slot-day{ height: 56px; }
+
+/* ===== モバイル最適化（～480px） ===== */
+@media (max-width: 480px){
+
+  /* ヘッダーを2段にして窮屈さ解消（前に貼ったレイアウトと相性OK） */
+  .calendar-header{
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "prev title next"
+      "views views today";
+    gap: 8px 8px;
+    padding: 14px 12px 8px;
+  }
+  .calendar-header .nav-button:nth-of-type(1){ grid-area: prev; }
+  .calendar-header .nav-button:nth-of-type(2){ grid-area: next; justify-self: end; }
+  .calendar-header .nav-button:nth-of-type(3){ grid-area: today; justify-self: end; }
+  .month-year{ grid-area: title; font-size: 20px; margin: 0; }
+  .view-controls{ grid-area: views; width: 100%; max-width: 280px; }
+
+  /* 週ビューのグリッドを画面にフィット */
+  .week-header{ font-size: 13px; }
+  .week-grid{
+    height: calc(100vh - 240px);  /* 端末に合わせて伸縮 */
+    overflow-y: auto;
+  }
+  .week-header, .week-grid{
+    grid-template-columns: 56px repeat(7, 1fr); /* 時間列を少し細く */
+  }
+  .week-time-slot, .week-time-slot-day{ height: 48px; }
+
+  /* イベント文字サイズと余白をモバイル向けに */
+  .week-event{ font-size: 11px; padding: 6px 8px; }
+  .week-event-time{ font-size: 10px; }
+  .week-event-title{ font-size: 11px; }
+}
     </style>
 </head>
 <body>
