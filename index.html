@@ -411,6 +411,52 @@
             word-break: break-word;
         }
 
+        .event-detail-value a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+            padding: 4px 8px;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin: 2px 0;
+        }
+
+        .event-detail-value a:hover {
+            background: rgba(52, 152, 219, 0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+            text-decoration: none;
+        }
+
+        .event-detail-value a[href*="zoom"] {
+            background: rgba(45, 140, 240, 0.15);
+            color: #2d8cf0;
+        }
+
+        .event-detail-value a[href*="zoom"]:hover {
+            background: rgba(45, 140, 240, 0.25);
+        }
+
+        .event-detail-value a[href*="meet"] {
+            background: rgba(52, 168, 83, 0.15);
+            color: #34a853;
+        }
+
+        .event-detail-value a[href*="meet"]:hover {
+            background: rgba(52, 168, 83, 0.25);
+        }
+
+        .event-detail-value a[href*="teams"] {
+            background: rgba(98, 100, 167, 0.15);
+            color: #6264a7;
+        }
+
+        .event-detail-value a[href*="teams"]:hover {
+            background: rgba(98, 100, 167, 0.25);
+        }
+
         .event-detail-link {
             color: #3498db;
             text-decoration: none;
@@ -1051,15 +1097,31 @@
 
             addDetailItem('🕒', '日時', dateTimeStr);
 
-            // 説明
+            // 説明（URLをリンクに変換）
             if (event.description) {
-                const description = event.description.replace(/\n/g, '<br>');
-                addDetailItem('📝', '説明', description);
+                const descriptionWithLinks = convertUrlsToLinks(event.description);
+                addDetailItem('📝', '説明', descriptionWithLinks, true);
             }
 
-            // 場所
+            // 場所（URLが含まれている場合はリンクに変換）
             if (event.location) {
-                addDetailItem('📍', '場所', event.location);
+                const locationWithLinks = convertUrlsToLinks(event.location);
+                addDetailItem('📍', '場所', locationWithLinks, true);
+            }
+
+            // Google Meet / Zoom リンク（conferenceDataから取得）
+            if (event.conferenceData && event.conferenceData.entryPoints) {
+                const videoLinks = event.conferenceData.entryPoints
+                    .filter(entry => entry.entryPointType === 'video')
+                    .map(entry => {
+                        const platform = detectPlatform(entry.uri);
+                        return `<a href="${entry.uri}" target="_blank" rel="noopener noreferrer">${platform}会議に参加</a>`;
+                    })
+                    .join('<br>');
+                
+                if (videoLinks) {
+                    addDetailItem('🎥', '会議リンク', videoLinks, true);
+                }
             }
 
             // 参加者
@@ -1079,7 +1141,7 @@
 
             // Google Calendar リンク
             if (event.htmlLink) {
-                addDetailItem('🔗', 'Google Calendar', `<a href="${event.htmlLink}" target="_blank" class="event-detail-link">カレンダーで開く</a>`);
+                addDetailItem('🔗', 'Google Calendar', `<a href="${event.htmlLink}" target="_blank" class="event-detail-link">カレンダーで開く</a>`, true);
             }
 
             // 作成者
@@ -1092,19 +1154,78 @@
             document.body.style.overflow = 'hidden';
         }
 
+        // URLをクリック可能なリンクに変換
+        function convertUrlsToLinks(text) {
+            // 改行をHTMLの<br>に変換
+            let html = text.replace(/\n/g, '<br>');
+            
+            // URLパターンを検出してリンクに変換
+            const urlPattern = /(https?:\/\/[^\s<>"\[\]{}|\\^`]+)/gi;
+            html = html.replace(urlPattern, (url) => {
+                const platform = detectPlatform(url);
+                const displayText = getDisplayText(url, platform);
+                return `<a href="${url}" target="_blank" rel="noopener noreferrer">${displayText}</a>`;
+            });
+            
+            return html;
+        }
+
+        // プラットフォームを検出
+        function detectPlatform(url) {
+            const urlLower = url.toLowerCase();
+            if (urlLower.includes('zoom.')) return 'Zoom';
+            if (urlLower.includes('meet.google.')) return 'Google Meet';
+            if (urlLower.includes('teams.microsoft.')) return 'Microsoft Teams';
+            if (urlLower.includes('webex.')) return 'Webex';
+            if (urlLower.includes('skype.')) return 'Skype';
+            return 'リンク';
+        }
+
+        // 表示テキストを取得
+        function getDisplayText(url, platform) {
+            if (platform === 'Zoom') return '🎥 Zoom会議に参加';
+            if (platform === 'Google Meet') return '🎥 Google Meet会議に参加';
+            if (platform === 'Microsoft Teams') return '🎥 Teams会議に参加';
+            if (platform === 'Webex') return '🎥 Webex会議に参加';
+            if (platform === 'Skype') return '🎥 Skype会議に参加';
+            
+            // 一般的なURL表示（短縮）
+            try {
+                const urlObj = new URL(url);
+                const domain = urlObj.hostname.replace('www.', '');
+                return `🔗 ${domain}`;
+            } catch {
+                return '🔗 リンクを開く';
+            }
+        }
+
         // 詳細項目を追加
-        function addDetailItem(icon, label, value) {
+        function addDetailItem(icon, label, value, isHtml = false) {
             const details = document.getElementById('modalDetails');
             const item = document.createElement('div');
             item.className = 'event-detail-item';
             
-            item.innerHTML = `
-                <div class="event-detail-icon">${icon}</div>
-                <div class="event-detail-content">
-                    <div class="event-detail-label">${label}</div>
-                    <div class="event-detail-value">${value}</div>
-                </div>
-            `;
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'event-detail-content';
+            
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'event-detail-label';
+            labelDiv.textContent = label;
+            
+            const valueDiv = document.createElement('div');
+            valueDiv.className = 'event-detail-value';
+            
+            if (isHtml) {
+                valueDiv.innerHTML = value;
+            } else {
+                valueDiv.textContent = value;
+            }
+            
+            contentDiv.appendChild(labelDiv);
+            contentDiv.appendChild(valueDiv);
+            
+            item.innerHTML = `<div class="event-detail-icon">${icon}</div>`;
+            item.appendChild(contentDiv);
             
             details.appendChild(item);
         }
