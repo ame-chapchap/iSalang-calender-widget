@@ -840,6 +840,57 @@
     padding: 8px;
   }
 }
+/* ===== カレンダーを横いっぱいに・サイドの装飾をオフ ===== */
+
+/* デスクトップでは最大幅を広げる（必要なら数値を好みで） */
+:root { --calendar-max: 1200px; }  /* 1100〜1280あたりが目安 */
+
+body{
+  /* サイドの余白をなくす（iOSのノッチ対策も考慮） */
+  padding: 0;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* カード風の影や丸みを弱め、幅を広げる */
+.calendar-container{
+  max-width: var(--calendar-max);
+  width: 100%;
+  margin: 0 auto;
+  border-radius: 12px;
+  box-shadow: none;            /* 影オフで“額縁感”をなくす */
+  border: none;
+}
+
+/* タブレット以下は“全面表示”にして完全にサイド装飾を消す */
+@media (max-width: 1024px){
+  /* 背景グラデを隠したい場合は真っ白にする */
+  body{ background: #fff; }
+
+  .calendar-container{
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+    border-radius: 0;          /* 角丸もオフ＝画面端までピッタリ */
+    box-shadow: none;
+    border: none;
+    background: #fff;          /* 下地を白に固定 */
+  }
+}
+
+/* グリッドも画面端に合わせて詰める（はみ出し防止&土曜欠け対策） */
+@media (max-width: 640px){
+  .calendar-grid{
+    grid-template-columns: repeat(7, minmax(0,1fr));
+    gap: 1px;
+    padding: 8px 10px;
+    width: 100%;
+  }
+  .calendar-header{
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
     </style>
 </head>
 <body>
