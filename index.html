@@ -693,6 +693,66 @@
                 padding: 15px 15px 10px 15px;
             }
         }
+:root{
+  /* 調整しやすいトークン */
+  --ink: #2c3e50;
+  --event-bg: #7BAEF5;         /* くすみブルー（背景に合う） */
+  --event-hover: #5A98F0;
+  --event-border: rgba(255,255,255,.28);
+  --event-shadow: rgba(90,152,240,.28);
+
+  --today-bg: rgba(134,197,184,.30); /* やわらかティールの面 */
+  --today-ring: #86C5B8;             /* “今日”の外枠色 */
+  --today-shadow: rgba(134,197,184,.35);
+}
+
+/* 今日セル（面＋リングで視認性UP） */
+.calendar-cell.today{
+  background: linear-gradient(135deg, var(--today-bg) 0%, rgba(134,197,184,.42) 100%);
+  box-shadow:
+    0 0 0 2px var(--today-ring) inset,
+    0 6px 18px var(--today-shadow);
+}
+
+/* 月/アジェンダのイベントチップ */
+.event{
+  background: linear-gradient(135deg, color-mix(in srgb, var(--event-bg) 85%, #ffffff 15%) 0%, var(--event-bg) 100%);
+  color: #fff;
+  border: 1px solid var(--event-border);
+  box-shadow: 0 3px 10px var(--event-shadow);
+  text-shadow: 0 1px 2px rgba(0,0,0,.25);
+}
+.event:hover{
+  background: linear-gradient(135deg, var(--event-hover) 0%, color-mix(in srgb, var(--event-hover) 90%, #2A84E4 10%) 100%);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--event-shadow) 80%, #2A84E4 20%);
+}
+
+/* 週ビューのイベント（色を合わせる） */
+.week-event{
+  background: color-mix(in srgb, var(--event-bg) 24%, #ffffff 76%);
+  border-left: 4px solid var(--event-bg);
+  color: color-mix(in srgb, var(--ink) 85%, #000 15%);
+}
+.week-event:hover{
+  background: color-mix(in srgb, var(--event-bg) 38%, #ffffff 62%);
+}
+
+/* アジェンダビューのイベント（色を合わせる） */
+.agenda-event{
+  background: color-mix(in srgb, var(--event-bg) 22%, #ffffff 78%);
+  border-left: 4px solid var(--event-bg);
+  color: color-mix(in srgb, var(--ink) 88%, #000 12%);
+}
+.agenda-event:hover{
+  background: color-mix(in srgb, var(--event-bg) 35%, #ffffff 65%);
+}
+
+/* “他の月”のセルでも色が沈みすぎないよう少しだけ持ち上げる */
+.calendar-cell.other-month .event{
+  opacity: .85;
+  box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
     </style>
 </head>
 <body>
