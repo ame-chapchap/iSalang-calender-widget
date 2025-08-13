@@ -438,7 +438,27 @@
             } catch (error) {
                 console.error('Calendar load error:', error);
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('error').style.display = 'flex';
+                
+                // より詳細なエラー表示
+                const errorDiv = document.getElementById('error');
+                errorDiv.style.display = 'flex';
+                
+                if (error.message.includes('403')) {
+                    errorDiv.innerHTML = `
+                        <div>🔐 アクセス権限エラー</div>
+                        <div style="font-size: 14px;">カレンダーが公開設定になっているか確認してください</div>
+                    `;
+                } else if (error.message.includes('400')) {
+                    errorDiv.innerHTML = `
+                        <div>⚠️ APIキーエラー</div>
+                        <div style="font-size: 14px;">APIキーまたはカレンダーIDを確認してください</div>
+                    `;
+                } else {
+                    errorDiv.innerHTML = `
+                        <div>⚠️ カレンダーの読み込みに失敗しました</div>
+                        <div style="font-size: 14px;">エラー: ${error.message}</div>
+                    `;
+                }
             }
         }
 
@@ -534,7 +554,11 @@
             
             const titleEl = document.createElement('div');
             titleEl.className = 'event-title';
-            titleEl.textContent = event.summary || '予定';
+            
+            // タイトルを1行に制限（最初の行のみ表示）
+            let title = event.summary || '予定';
+            const firstLine = title.split('\n')[0]; // 改行で分割して最初の行のみ
+            titleEl.textContent = firstLine;
             eventEl.appendChild(titleEl);
             
             return eventEl;
