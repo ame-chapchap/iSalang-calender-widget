@@ -753,6 +753,93 @@
   opacity: .85;
   box-shadow: 0 2px 6px rgba(0,0,0,.08);
 }
+/* ====== モバイル最適化（幅 ≤ 480px）====== */
+@media (max-width: 480px){
+
+  /* 1) グリッドが親からはみ出さないように調整 */
+  .calendar-container{
+    margin: 10px;
+    overflow: hidden; /* はみ出しを隠す */
+  }
+  .calendar-grid{
+    width: 100%;
+    padding: 6px;            /* 内側余白を縮める */
+    gap: 1px;                /* 列間の隙間を縮める */
+    grid-template-columns: repeat(7, minmax(0,1fr)); /* はみ出し防止 */
+  }
+  .calendar-header-cell{
+    padding: 10px 2px;
+    font-size: 11px;
+  }
+  .calendar-cell{
+    min-height: 78px;
+    padding: 6px 4px;
+  }
+
+  /* 2) イベントチップを小さめにして圧縮 */
+  .event{
+    font-size: 10px;
+    padding: 3px 6px;
+    border-radius: 5px;
+  }
+  .event-title{ font-size: 10px; }
+  .event-time{  font-size: 9px; }
+
+  /* 3) ヘッダーを2段レイアウトにして“窮屈”解消 */
+  .calendar-header{
+    display: grid;
+    grid-template-columns: 1fr auto 1fr; /* ← 月タイトル中央、左右に矢印 */
+    grid-template-rows: auto auto;       /* 2段 */
+    grid-template-areas:
+      "prev title next"
+      "views views today";
+    gap: 10px 8px;
+    padding: 16px 14px 10px;
+  }
+  /* 要素の配置（HTMLの順番そのままでOK） */
+  .calendar-header .nav-button:nth-of-type(1){ grid-area: prev; justify-self: start; }
+  .calendar-header .nav-button:nth-of-type(2){ grid-area: next; justify-self: end; }
+  .calendar-header .nav-button:nth-of-type(3){ grid-area: today; justify-self: end; }
+
+  .month-year{
+    grid-area: title;
+    margin: 0;
+    font-size: 20px;
+    text-align: center;
+  }
+
+  .view-controls{
+    grid-area: views;
+    justify-self: center;
+    width: 100%;
+    max-width: 280px;
+    padding: 4px;
+    gap: 6px;
+  }
+
+  .view-button{
+    min-height: 34px;
+    padding: 8px 12px;
+    font-size: 13px;
+    flex: 1 1 auto;
+  }
+
+  .nav-button{
+    min-width: 40px;
+    min-height: 40px;
+    padding: 6px 10px;
+    font-size: 16px;
+  }
+}
+
+/* すこし幅がある端末（～640px）でも余白を確保 */
+@media (max-width: 640px){
+  .calendar-grid{
+    grid-template-columns: repeat(7, minmax(0,1fr));
+    gap: 1.5px;
+    padding: 8px;
+  }
+}
     </style>
 </head>
 <body>
