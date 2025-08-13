@@ -1,1782 +1,556 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Calendar Widget</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #d6e9f0 0%, #f0e6d2 100%);
-            min-height: 100vh;
-            overflow-x: hidden;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .calendar-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 0;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .calendar-view {
-            display: none;
-        }
-
-        .calendar-view.active {
-            display: block;
-        }
-
-        .calendar-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0;
-            padding: 30px 40px 20px 40px;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-        }
-
-        .nav-button {
-            background: rgba(214, 233, 240, 0.6);
-            border: 1px solid rgba(214, 233, 240, 0.8);
-            border-radius: 8px;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 18px;
-            color: #5a7c89;
-            transition: all 0.2s ease;
-            min-height: 40px;
-            min-width: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .nav-button:hover {
-            background: rgba(214, 233, 240, 0.8);
-            color: #4a6c79;
-        }
-
-        .month-year {
-            font-size: 24px;
-            font-weight: 600;
-            color: #4a6c79;
-            text-align: center;
-            flex: 1;
-            margin: 0 20px;
-        }
-
-        .view-controls {
-            display: flex;
-            gap: 8px;
-            background: rgba(214, 233, 240, 0.4);
-            border-radius: 10px;
-            padding: 4px;
-        }
-
-        .view-button {
-            background: transparent;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 16px;
-            cursor: pointer;
-            font-size: 14px;
-            color: #5a7c89;
-            transition: all 0.2s ease;
-            min-height: 36px;
-            font-weight: 500;
-        }
-
-        .view-button.active {
-            background: rgba(255, 255, 255, 0.9);
-            color: #4a6c79;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 2px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 10px;
-        }
-
-        .calendar-header-cell {
-            background: rgba(200, 200, 200, 0.3);
-            color: #2c3e50;
-            text-align: center;
-            padding: 15px 5px;
-            font-weight: bold;
-            font-size: 12px;
-            border-radius: 10px;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(200, 200, 200, 0.2);
-        }
-
-        .calendar-cell {
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 10px;
-            padding: 5px;
-            min-height: 90px;
-            position: relative;
-            backdrop-filter: blur(5px);
-            transition: all 0.3s ease;
-        }
-
-        .calendar-cell:hover {
-            background: rgba(255, 255, 255, 0.6);
-            transform: scale(1.02);
-        }
-
-        .calendar-cell.other-month {
-            background: rgba(200, 200, 200, 0.2);
-            color: #7f8c8d;
-            opacity: 0.65;
-        }
-
-        .calendar-cell.other-month .date-number {
-            color: #7f8c8d;
-            opacity: 0.8;
-        }
-
-        .calendar-cell.other-month .event {
-            background: linear-gradient(135deg, rgba(149, 165, 166, 0.2) 0%, rgba(127, 140, 141, 0.3) 100%);
-            color: rgba(255, 255, 255, 0.8);
-            opacity: 0.7;
-            box-shadow: 0 1px 4px rgba(149, 165, 166, 0.2);
-        }
-
-        .calendar-cell.other-month:hover {
-            background: rgba(200, 200, 200, 0.3);
-            transform: scale(1.01);
-            opacity: 0.8;
-        }
-
-        .calendar-cell.today {
-            background: linear-gradient(135deg, rgba(168, 230, 207, 0.4) 0%, rgba(136, 216, 163, 0.5) 100%);
-            box-shadow: 0 4px 15px rgba(168, 230, 207, 0.2);
-        }
-
-        .date-number {
-            font-size: 14px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 3px;
-        }
-
-        .event {
-            background: linear-gradient(135deg, rgba(66, 165, 245, 0.4) 0%, rgba(42, 132, 228, 0.5) 100%);
-            color: white;
-            font-size: 11px;
-            padding: 4px 6px;
-            border-radius: 6px;
-            margin-bottom: 2px;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 2px 8px rgba(66, 165, 245, 0.15);
-        }
-
-        .event:hover {
-            background: linear-gradient(135deg, rgba(66, 165, 245, 0.8) 0%, rgba(42, 132, 228, 0.9) 100%);
-            transform: translateY(-1px) scale(1.02);
-            box-shadow: 0 4px 15px rgba(66, 165, 245, 0.3);
-        }
-
-        .event-time {
-            font-weight: bold;
-            display: block;
-            font-size: 10px;
-            opacity: 0.9;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        }
-
-        .event-title {
-            font-size: 10px;
-            line-height: 1.3;
-            word-break: break-word;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        }
-
-        .week-view {
-            display: none;
-            background: rgba(255, 255, 255, 0.7);
-        }
-
-        .week-view.active {
-            display: block;
-        }
-
-        .week-header {
-            display: grid;
-            grid-template-columns: 80px repeat(7, 1fr);
-            background: #f5f5f5;
-            border-bottom: 1px solid rgba(214, 233, 240, 0.6);
-        }
-
-        .week-header .time-column {
-            padding: 16px 8px;
-            font-weight: 500;
-            font-size: 14px;
-            color: #5a7c89;
-            text-align: center;
-        }
-
-        .week-header .day-header {
-            padding: 16px 8px;
-            font-weight: 500;
-            font-size: 14px;
-            color: #5a7c89;
-            text-align: center;
-            border-right: 1px solid rgba(214, 233, 240, 0.4);
-        }
-
-        .week-header .day-header:last-child {
-            border-right: none;
-        }
-
-        .week-grid {
-            display: grid;
-            grid-template-columns: 80px repeat(7, 1fr);
-            min-height: 600px;
-        }
-
-        .week-time-column {
-            border-right: 1px solid rgba(214, 233, 240, 0.4);
-            background: rgba(255, 255, 255, 0.5);
-        }
-
-        .week-time-slot {
-            height: 60px;
-            padding: 8px;
-            border-bottom: 1px solid rgba(214, 233, 240, 0.3);
-            font-size: 12px;
-            color: #5a7c89;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-        }
-
-        .week-day-column {
-            border-right: 1px solid rgba(214, 233, 240, 0.4);
-            background: rgba(255, 255, 255, 0.5);
-            position: relative;
-        }
-
-        .week-day-column:last-child {
-            border-right: none;
-        }
-
-        .week-day-column.today {
-            background: rgba(173, 216, 230, 0.15);
-        }
-
-        .week-time-slot-day {
-            height: 60px;
-            border-bottom: 1px solid rgba(214, 233, 240, 0.3);
-            padding: 4px;
-            position: relative;
-        }
-
-        .week-event {
-            background: rgba(154, 205, 223, 0.25);
-            color: #3a5a6b;
-            padding: 4px 8px;
-            border-radius: 4px;
-            margin-bottom: 2px;
-            cursor: pointer;
-            font-size: 11px;
-            border-left: 3px solid #6b9fc7;
-            transition: all 0.2s ease;
-        }
-
-        .week-event:hover {
-            background: rgba(154, 205, 223, 0.4);
-            transform: translateY(-1px);
-        }
-
-        .week-event-time {
-            font-weight: 600;
-            font-size: 10px;
-            color: #2a4a5b;
-        }
-
-        .week-event-title {
-            font-weight: 500;
-            font-size: 10px;
-            color: #2a4a5b;
-        }
-
-        .agenda-view {
-            display: none;
-            background: rgba(255, 255, 255, 0.7);
-            padding: 20px;
-        }
-
-        .agenda-view.active {
-            display: block;
-        }
-
-        .agenda-event {
-            background: rgba(154, 205, 223, 0.25);
-            color: #3a5a6b;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            border-left: 4px solid #6b9fc7;
-            backdrop-filter: blur(5px);
-        }
-
-        .agenda-event:hover {
-            background: rgba(154, 205, 223, 0.4);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(107, 159, 199, 0.15);
-        }
-
-        .agenda-date {
-            font-size: 20px;
-            font-weight: 600;
-            color: #4a6c79;
-            margin: 24px 0 12px 0;
-            padding-bottom: 8px;
-            border-bottom: 2px solid rgba(214, 233, 240, 0.6);
-        }
-
-        .error-message {
-            background: rgba(240, 230, 210, 0.8);
-            color: #8b5a3c;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: left;
-            margin: 20px;
-            border-left: 4px solid #d4a574;
-            line-height: 1.6;
-            backdrop-filter: blur(5px);
-        }
-
-        .setup-instructions {
-            background: rgba(214, 233, 240, 0.8);
-            color: #3a5a6b;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px;
-            border-left: 4px solid #6b9fc7;
-            backdrop-filter: blur(5px);
-        }
-
-        .setup-instructions h3 {
-            margin-top: 0;
-            color: #2a4a5b;
-        }
-
-        .setup-instructions ol {
-            margin: 10px 0;
-            padding-left: 20px;
-        }
-
-        .setup-instructions li {
-            margin: 8px 0;
-        }
-
-        .setup-instructions code {
-            background: rgba(107, 159, 199, 0.2);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            font-size: 16px;
-            color: #5a7c89;
-        }
-
-        /* ツールチップ */
-        .tooltip {
-            position: absolute;
-            background: rgba(44, 62, 80, 0.95);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            z-index: 1000;
-            white-space: nowrap;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .tooltip.show {
-            opacity: 1;
-        }
-
-        /* イベント詳細モーダル */
-        .event-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(5px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .event-modal.show {
-            display: flex;
-        }
-
-        .event-modal-content {
-            background: linear-gradient(135deg, #e8f4f8 0%, #f0f8e8 100%);
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            position: relative;
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            animation: slideIn 0.3s ease;
-        }
-
-        .event-modal-close {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            background: none;
-            border: none;
-            font-size: 24px;
-            color: #5a7c89;
-            cursor: pointer;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: all 0.3s ease;
-        }
-
-        .event-modal-close:hover {
-            background: rgba(212, 165, 116, 0.2);
-            color: #d4a574;
-            transform: scale(1.1);
-        }
-
-        .event-modal-title {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 20px;
-            padding-right: 40px;
-            line-height: 1.3;
-        }
-
-        .event-modal-details {
-            display: grid;
-            gap: 15px;
-        }
-
-        .event-detail-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 10px;
-            backdrop-filter: blur(5px);
-        }
-
-        .event-detail-icon {
-            font-size: 18px;
-            color: #3498db;
-            margin-top: 2px;
-            min-width: 20px;
-        }
-
-        .event-detail-content {
-            flex: 1;
-        }
-
-        .event-detail-label {
-            font-weight: bold;
-            color: #2c3e50;
-            font-size: 14px;
-            margin-bottom: 4px;
-        }
-
-        .event-detail-value {
-            color: #34495e;
-            font-size: 14px;
-            line-height: 1.5;
-            word-break: break-word;
-        }
-
-        .event-detail-value a {
-            color: #3498db;
-            text-decoration: underline;
-            word-break: break-all;
-        }
-
-        .event-detail-value a:hover {
-            color: #2980b9;
-            text-decoration: underline;
-        }
-
-
-
-        .event-detail-value a[href*="zoom"] {
-            color: #2d8cf0;
-        }
-
-        .event-detail-value a[href*="zoom"]:hover {
-            color: #1a73e8;
-        }
-
-        .event-detail-value a[href*="meet"] {
-            color: #34a853;
-        }
-
-        .event-detail-value a[href*="meet"]:hover {
-            color: #137333;
-        }
-
-        .event-detail-value a[href*="teams"] {
-            color: #6264a7;
-        }
-
-        .event-detail-value a[href*="teams"]:hover {
-            color: #464775;
-        }
-
-        .event-detail-link {
-            color: #3498db;
-            text-decoration: none;
-            word-break: break-all;
-        }
-
-        .event-detail-link:hover {
-            text-decoration: underline;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideIn {
-            from { 
-                opacity: 0;
-                transform: translateY(-40px) scale(0.9);
-            }
-            to { 
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        @media (max-width: 480px) {
-            .event-modal-content {
-                padding: 20px;
-                margin: 20px;
-            }
-            
-            .event-modal-title {
-                font-size: 20px;
-            }
-            
-            .event-detail-item {
-                padding: 10px;
-            }
-        }
-
-        /* レスポンシブデザイン */
-        @media (max-width: 768px) {
-            .calendar-container {
-                margin: 10px;
-                border-radius: 12px;
-            }
-            
-            .calendar-header {
-                padding: 20px 20px 15px 20px;
-            }
-            
-            .calendar-cell {
-                min-height: 100px;
-                padding: 8px 6px;
-            }
-            
-            .calendar-cell.other-month {
-                opacity: 0.4;
-            }
-            
-            .month-year {
-                font-size: 20px;
-                margin: 0 15px;
-            }
-            
-            .nav-button {
-                padding: 6px 10px;
-                font-size: 16px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-            
-            .calendar-cell {
-                min-height: 80px;
-                padding: 6px 4px;
-            }
-            
-            .calendar-cell.other-month {
-                opacity: 0.3;
-            }
-            
-            .event {
-                font-size: 10px;
-                padding: 3px 6px;
-                border-radius: 3px;
-            }
-            
-            .event-title {
-                font-size: 10px;
-            }
-            
-            .event-time {
-                font-size: 9px;
-            }
-            
-            .date-number {
-                font-size: 14px;
-            }
-            
-            .month-year {
-                font-size: 18px;
-            }
-            
-            .calendar-header-cell {
-                padding: 12px 4px;
-                font-size: 12px;
-            }
-            
-            .calendar-header {
-                padding: 15px 15px 10px 15px;
-            }
-        }
-:root{
-  /* 調整しやすいトークン */
-  --ink: #2c3e50;
-  --event-bg: #7BAEF5;         /* くすみブルー（背景に合う） */
-  --event-hover: #5A98F0;
-  --event-border: rgba(255,255,255,.28);
-  --event-shadow: rgba(90,152,240,.28);
-
-  --today-bg: rgba(134,197,184,.30); /* やわらかティールの面 */
-  --today-ring: #86C5B8;             /* “今日”の外枠色 */
-  --today-shadow: rgba(134,197,184,.35);
-}
-
-/* 今日セル（面＋リングで視認性UP） */
-.calendar-cell.today{
-  background: linear-gradient(135deg, var(--today-bg) 0%, rgba(134,197,184,.42) 100%);
-  box-shadow:
-    0 0 0 2px var(--today-ring) inset,
-    0 6px 18px var(--today-shadow);
-}
-
-/* 月/アジェンダのイベントチップ */
-.event{
-  background: linear-gradient(135deg, color-mix(in srgb, var(--event-bg) 85%, #ffffff 15%) 0%, var(--event-bg) 100%);
-  color: #fff;
-  border: 1px solid var(--event-border);
-  box-shadow: 0 3px 10px var(--event-shadow);
-  text-shadow: 0 1px 2px rgba(0,0,0,.25);
-}
-.event:hover{
-  background: linear-gradient(135deg, var(--event-hover) 0%, color-mix(in srgb, var(--event-hover) 90%, #2A84E4 10%) 100%);
-  transform: translateY(-1px) scale(1.02);
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--event-shadow) 80%, #2A84E4 20%);
-}
-
-/* 週ビューのイベント（色を合わせる） */
-.week-event{
-  background: color-mix(in srgb, var(--event-bg) 24%, #ffffff 76%);
-  border-left: 4px solid var(--event-bg);
-  color: color-mix(in srgb, var(--ink) 85%, #000 15%);
-}
-.week-event:hover{
-  background: color-mix(in srgb, var(--event-bg) 38%, #ffffff 62%);
-}
-
-/* アジェンダビューのイベント（色を合わせる） */
-.agenda-event{
-  background: color-mix(in srgb, var(--event-bg) 22%, #ffffff 78%);
-  border-left: 4px solid var(--event-bg);
-  color: color-mix(in srgb, var(--ink) 88%, #000 12%);
-}
-.agenda-event:hover{
-  background: color-mix(in srgb, var(--event-bg) 35%, #ffffff 65%);
-}
-
-/* “他の月”のセルでも色が沈みすぎないよう少しだけ持ち上げる */
-.calendar-cell.other-month .event{
-  opacity: .85;
-  box-shadow: 0 2px 6px rgba(0,0,0,.08);
-}
-/* ====== モバイル最適化（幅 ≤ 480px）====== */
-@media (max-width: 480px){
-
-  /* 1) グリッドが親からはみ出さないように調整 */
-  .calendar-container{
-    margin: 10px;
-    overflow: hidden; /* はみ出しを隠す */
-  }
-  .calendar-grid{
-    width: 100%;
-    padding: 6px;            /* 内側余白を縮める */
-    gap: 1px;                /* 列間の隙間を縮める */
-    grid-template-columns: repeat(7, minmax(0,1fr)); /* はみ出し防止 */
-  }
-  .calendar-header-cell{
-    padding: 10px 2px;
-    font-size: 11px;
-  }
-  .calendar-cell{
-    min-height: 78px;
-    padding: 6px 4px;
-  }
-
-  /* 2) イベントチップを小さめにして圧縮 */
-  .event{
-    font-size: 10px;
-    padding: 3px 6px;
-    border-radius: 5px;
-  }
-  .event-title{ font-size: 10px; }
-  .event-time{  font-size: 9px; }
-
-  /* 3) ヘッダーを2段レイアウトにして“窮屈”解消 */
-  .calendar-header{
-    display: grid;
-    grid-template-columns: 1fr auto 1fr; /* ← 月タイトル中央、左右に矢印 */
-    grid-template-rows: auto auto;       /* 2段 */
-    grid-template-areas:
-      "prev title next"
-      "views views today";
-    gap: 10px 8px;
-    padding: 16px 14px 10px;
-  }
-  /* 要素の配置（HTMLの順番そのままでOK） */
-  .calendar-header .nav-button:nth-of-type(1){ grid-area: prev; justify-self: start; }
-  .calendar-header .nav-button:nth-of-type(2){ grid-area: next; justify-self: end; }
-  .calendar-header .nav-button:nth-of-type(3){ grid-area: today; justify-self: end; }
-
-  .month-year{
-    grid-area: title;
-    margin: 0;
-    font-size: 20px;
-    text-align: center;
-  }
-
-  .view-controls{
-    grid-area: views;
-    justify-self: center;
-    width: 100%;
-    max-width: 280px;
-    padding: 4px;
-    gap: 6px;
-  }
-
-  .view-button{
-    min-height: 34px;
-    padding: 8px 12px;
-    font-size: 13px;
-    flex: 1 1 auto;
-  }
-
-  .nav-button{
-    min-width: 40px;
-    min-height: 40px;
-    padding: 6px 10px;
-    font-size: 16px;
-  }
-}
-
-/* すこし幅がある端末（～640px）でも余白を確保 */
-@media (max-width: 640px){
-  .calendar-grid{
-    grid-template-columns: repeat(7, minmax(0,1fr));
-    gap: 1.5px;
-    padding: 8px;
-  }
-}
-/* ===== カレンダーを横いっぱいに・サイドの装飾をオフ ===== */
-
-/* デスクトップでは最大幅を広げる（必要なら数値を好みで） */
-:root { --calendar-max: 1200px; }  /* 1100〜1280あたりが目安 */
-
-body{
-  /* サイドの余白をなくす（iOSのノッチ対策も考慮） */
-  padding: 0;
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
-}
-
-/* カード風の影や丸みを弱め、幅を広げる */
-.calendar-container{
-  max-width: var(--calendar-max);
-  width: 100%;
-  margin: 0 auto;
-  border-radius: 12px;
-  box-shadow: none;            /* 影オフで“額縁感”をなくす */
-  border: none;
-}
-
-/* タブレット以下は“全面表示”にして完全にサイド装飾を消す */
-@media (max-width: 1024px){
-  /* 背景グラデを隠したい場合は真っ白にする */
-  body{ background: #fff; }
-
-  .calendar-container{
-    max-width: 100%;
-    width: 100%;
-    margin: 0;
-    border-radius: 0;          /* 角丸もオフ＝画面端までピッタリ */
-    box-shadow: none;
-    border: none;
-    background: #fff;          /* 下地を白に固定 */
-  }
-}
-
-/* グリッドも画面端に合わせて詰める（はみ出し防止&土曜欠け対策） */
-@media (max-width: 640px){
-  .calendar-grid{
-    grid-template-columns: repeat(7, minmax(0,1fr));
-    gap: 1px;
-    padding: 8px 10px;
-    width: 100%;
-  }
-  .calendar-header{
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-}
-/* ===== Week view polish ===== */
-
-/* 共通: ヘッダー固定＆今日の列をきれいに強調 */
-.week-header{
-  position: sticky;
-  top: 0;                 /* カレンダーヘッダーの直下に固定 */
-  z-index: 5;
-  backdrop-filter: blur(6px);
-  background: rgba(255,255,255,.85);
-  border-bottom: 1px solid rgba(214,233,240,.6);
-}
-
-/* スクロールできる時間エリア（高さを自動で算出） */
-.week-grid{
-  height: min(72vh, calc(100vh - 260px));
-  overflow-y: auto;
-  border-top: 1px solid rgba(214,233,240,.6);
-}
-
-/* 左の時間カラムを固定（縦スクロールしても見失わない） */
-.week-time-column{
-  position: sticky;
-  left: 0;
-  z-index: 4;
-  background: rgba(255,255,255,.9);
-  backdrop-filter: blur(4px);
-}
-
-/* “今日”の縦帯を柔らかくハイライト（トークンに追従） */
-.week-day-column.today{
-  background: linear-gradient(180deg, rgba(134,197,184,.20), rgba(134,197,184,.08));
-  box-shadow: inset 0 0 0 2px var(--today-ring, #86C5B8);
-}
-
-/* イベントチップ（週ビュー）を月/予定と統一 */
-.week-event{
-  background: color-mix(in srgb, var(--event-bg, #7BAEF5) 24%, #ffffff 76%);
-  border-left: 4px solid var(--event-bg, #7BAEF5);
-  color: color-mix(in srgb, #2c3e50 88%, #000 12%);
-  border-radius: 8px;
-}
-.week-event:hover{ background: color-mix(in srgb, var(--event-bg, #7BAEF5) 38%, #ffffff 62%); }
-
-/* タイムスロットの高さを少し詰めて情報量UP */
-.week-time-slot, .week-time-slot-day{ height: 56px; }
-
-/* ===== モバイル最適化（～480px） ===== */
-@media (max-width: 480px){
-
-  /* ヘッダーを2段にして窮屈さ解消（前に貼ったレイアウトと相性OK） */
-  .calendar-header{
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    grid-template-rows: auto auto;
-    grid-template-areas:
-      "prev title next"
-      "views views today";
-    gap: 8px 8px;
-    padding: 14px 12px 8px;
-  }
-  .calendar-header .nav-button:nth-of-type(1){ grid-area: prev; }
-  .calendar-header .nav-button:nth-of-type(2){ grid-area: next; justify-self: end; }
-  .calendar-header .nav-button:nth-of-type(3){ grid-area: today; justify-self: end; }
-  .month-year{ grid-area: title; font-size: 20px; margin: 0; }
-  .view-controls{ grid-area: views; width: 100%; max-width: 280px; }
-
-  /* 週ビューのグリッドを画面にフィット */
-  .week-header{ font-size: 13px; }
-  .week-grid{
-    height: calc(100vh - 240px);  /* 端末に合わせて伸縮 */
-    overflow-y: auto;
-  }
-  .week-header, .week-grid{
-    grid-template-columns: 56px repeat(7, 1fr); /* 時間列を少し細く */
-  }
-  .week-time-slot, .week-time-slot-day{ height: 48px; }
-
-  /* イベント文字サイズと余白をモバイル向けに */
-  .week-event{ font-size: 11px; padding: 6px 8px; }
-  .week-event-time{ font-size: 10px; }
-  .week-event-title{ font-size: 11px; }
-}
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Google Calendar Widget</title>
+  <style>
+    /* ========= Reset ========= */
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    /* ========= Theme Tokens ========= */
+    :root{
+      --ink: #2c3e50;
+      --event-bg: #7BAEF5;
+      --event-hover: #5A98F0;
+      --event-border: rgba(255,255,255,.28);
+      --event-shadow: rgba(90,152,240,.28);
+
+      --today-bg: rgba(134,197,184,.30);
+      --today-ring: #86C5B8;
+      --today-shadow: rgba(134,197,184,.35);
+
+      --container-max: 1100px; /* PCの最大幅 */
+    }
+
+    /* ========= Layout (PCデザインあり) ========= */
+    body{
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #d6e9f0 0%, #f0e6d2 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 24px;
+    }
+    .calendar-container{
+      max-width: var(--container-max);
+      margin: 0 auto;
+      background: rgba(255,255,255,.9);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,.2);
+      overflow: hidden;
+    }
+
+    /* ========= Header ========= */
+    .calendar-header{
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 24px 32px 16px;
+      background: rgba(255,255,255,.8);
+      backdrop-filter: blur(8px);
+    }
+    .nav-button{
+      background: rgba(214,233,240,.6);
+      border:1px solid rgba(214,233,240,.8);
+      border-radius:10px;
+      min-width:42px; min-height:42px;
+      font-size:18px; color:#5a7c89; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition:.2s;
+    }
+    .nav-button:hover{ background: rgba(214,233,240,.8); color:#4a6c79; }
+    .month-year{
+      font-size:24px; font-weight:700; color:#4a6c79; text-align:center; flex:1; margin:0 16px;
+    }
+    .view-controls{
+      display:flex; gap:8px; background: rgba(214,233,240,.4); border-radius:12px; padding:4px;
+      justify-content:center;
+    }
+    .view-button{
+      background:transparent; border:none; border-radius:8px;
+      padding:8px 16px; min-height:36px; font-size:14px; font-weight:600;
+      color:#5a7c89; cursor:pointer; transition:.2s;
+    }
+    .view-button.active{
+      background: rgba(255,255,255,.95);
+      color:#4a6c79; box-shadow:0 2px 8px rgba(0,0,0,.08);
+    }
+
+    /* ========= Month View ========= */
+    .calendar-view{ display:none; }
+    .calendar-view.active{ display:block; }
+
+    .calendar-grid{
+      display:grid; grid-template-columns:repeat(7,1fr);
+      gap:2px; padding:10px; background: rgba(255,255,255,.1);
+      border-radius:14px;
+    }
+    .calendar-header-cell{
+      background: rgba(200,200,200,.3);
+      color:#2c3e50; text-align:center;
+      padding:12px 4px; font-weight:700; font-size:12px;
+      border-radius:10px; border:1px solid rgba(200,200,200,.2);
+      backdrop-filter: blur(4px);
+    }
+    .calendar-cell{
+      background: rgba(255,255,255,.45);
+      border-radius:10px; padding:6px; min-height:92px;
+      position:relative; transition:.25s; backdrop-filter: blur(4px);
+    }
+    .calendar-cell:hover{ background: rgba(255,255,255,.65); transform: scale(1.01); }
+    .calendar-cell.other-month{ background: rgba(200,200,200,.2); color:#7f8c8d; opacity:.65; }
+    .calendar-cell.other-month .date-number{ color:#7f8c8d; opacity:.8; }
+    .calendar-cell.other-month .event{
+      background: linear-gradient(135deg, rgba(149,165,166,.2) 0%, rgba(127,140,141,.3) 100%);
+      color: rgba(255,255,255,.9); box-shadow: 0 1px 4px rgba(149,165,166,.2);
+    }
+
+    .calendar-cell.today{
+      background: linear-gradient(135deg, var(--today-bg) 0%, rgba(134,197,184,.42) 100%);
+      box-shadow: 0 0 0 2px var(--today-ring) inset, 0 6px 18px var(--today-shadow);
+    }
+    .date-number{ font-size:14px; font-weight:700; color:#2c3e50; margin-bottom:4px; }
+
+    .event{
+      background: linear-gradient(135deg, color-mix(in srgb, var(--event-bg) 85%, #fff 15%) 0%, var(--event-bg) 100%);
+      color:#fff; font-size:11px; padding:4px 6px; border-radius:6px; margin-bottom:3px; cursor:pointer;
+      border:1px solid var(--event-border); box-shadow:0 3px 10px var(--event-shadow);
+      text-shadow:0 1px 2px rgba(0,0,0,.25); transition:.2s;
+    }
+    .event:hover{
+      background: linear-gradient(135deg, var(--event-hover) 0%, color-mix(in srgb, var(--event-hover) 90%, #2A84E4 10%) 100%);
+      transform: translateY(-1px) scale(1.02); box-shadow:0 6px 16px color-mix(in srgb, var(--event-shadow) 80%, #2A84E4 20%);
+    }
+    .event-time{ font-weight:700; display:block; font-size:10px; opacity:.9; text-shadow:0 1px 2px rgba(0,0,0,.2); }
+    .event-title{ font-size:10px; line-height:1.3; word-break:break-word; text-shadow:0 1px 2px rgba(0,0,0,.2); }
+
+    /* ========= Agenda View ========= */
+    .agenda-view{ display:none; background: rgba(255,255,255,.7); padding:20px; }
+    .agenda-view.active{ display:block; }
+    .agenda-date{
+      font-size:18px; font-weight:700; color:#4a6c79;
+      margin:24px 0 12px; padding-bottom:8px; border-bottom:2px solid rgba(214,233,240,.6);
+    }
+    .agenda-event{
+      background: color-mix(in srgb, var(--event-bg) 22%, #fff 78%);
+      color: color-mix(in srgb, var(--ink) 88%, #000 12%);
+      padding:16px; border-radius:8px; margin-bottom:12px; cursor:pointer;
+      border-left:4px solid var(--event-bg); transition:.2s; backdrop-filter: blur(4px);
+    }
+    .agenda-event:hover{ background: color-mix(in srgb, var(--event-bg) 35%, #fff 65%); }
+
+    /* ========= Tooltip / Modal ========= */
+    .tooltip{
+      position:absolute; background: rgba(44,62,80,.95); color:#fff;
+      padding:8px 12px; border-radius:8px; font-size:12px; pointer-events:none;
+      opacity:0; transition: opacity .3s; z-index:1000; white-space:nowrap;
+    }
+    .tooltip.show{ opacity:1; }
+
+    .event-modal{
+      position:fixed; inset:0; background: rgba(0,0,0,.6); display:none; justify-content:center; align-items:center;
+      z-index:2000; animation: fadeIn .3s ease;
+    }
+    .event-modal.show{ display:flex; }
+    .event-modal-content{
+      background: linear-gradient(135deg, #e8f4f8 0%, #f0f8e8 100%);
+      border-radius:20px; padding:28px; max-width:500px; width:90%; max-height:80vh; overflow:auto;
+      border:1px solid rgba(255,255,255,.3); box-shadow:0 20px 40px rgba(0,0,0,.3); position:relative;
+      animation: slideIn .3s ease;
+    }
+    .event-modal-close{
+      position:absolute; top:14px; right:18px; background:none; border:none; font-size:24px; color:#5a7c89; cursor:pointer;
+      width:30px; height:30px; border-radius:50%; transition:.2s;
+    }
+    .event-modal-title{ font-size:22px; font-weight:800; color:#2c3e50; margin-bottom:16px; }
+    .event-detail-item{ display:flex; gap:12px; padding:12px; background: rgba(255,255,255,.45); border-radius:10px; }
+    .event-detail-label{ font-weight:700; color:#2c3e50; font-size:14px; margin-bottom:4px; }
+    .event-detail-value{ color:#34495e; font-size:14px; line-height:1.5; word-break: break-word; }
+    .event-detail-value a{ color:#3498db; text-decoration: underline; }
+
+    @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+    @keyframes slideIn{ from{opacity:0; transform: translateY(-36px) scale(.96);} to{opacity:1; transform:none;} }
+
+    /* ========= Responsive (スマホはデザインを消して全幅) ========= */
+    @media (max-width: 640px){
+      body{ background:#fff !important; padding:0 !important; margin:0 !important; }
+      .calendar-container{
+        max-width:100% !important; width:100% !important; margin:0 !important;
+        border-radius:0 !important; box-shadow:none !important; border:none !important; background:#fff !important;
+      }
+      .calendar-header{
+        display:grid; grid-template-columns:1fr auto 1fr; grid-template-rows:auto auto;
+        grid-template-areas: "prev title next" "views views today";
+        gap:10px 8px; padding:14px 12px 8px;
+      }
+      .calendar-header .nav-button:nth-of-type(1){ grid-area:prev; justify-self:start; }
+      .calendar-header .nav-button:nth-of-type(2){ grid-area:next; justify-self:end; }
+      .calendar-header .nav-button:nth-of-type(3){ grid-area:today; justify-self:end; }
+      .month-year{ grid-area:title; margin:0; font-size:20px; text-align:center; }
+      .view-controls{ grid-area:views; width:100%; max-width:280px; justify-self:center; }
+      .view-button{ min-height:34px; padding:8px 12px; font-size:13px; flex:1 1 auto; }
+
+      .calendar-grid{
+        grid-template-columns: repeat(7, minmax(0,1fr));
+        gap:1px; padding:8px 10px; width:100%;
+      }
+      .calendar-cell{ min-height:80px; padding:6px 4px; }
+      .calendar-header-cell{ padding:10px 2px; font-size:11px; }
+      .event{ font-size:10px; padding:3px 6px; border-radius:5px; }
+      .event-time{ font-size:9px; }
+      .event-title{ font-size:10px; }
+      .agenda-view{ padding:14px; }
+    }
+
+    /* ========= Loading / Error ========= */
+    .loading{ text-align:center; padding:36px; font-size:16px; color:#5a7c89; }
+    .error-message{
+      background: rgba(240,230,210,.85); color:#8b5a3c; padding:20px; border-radius:8px; margin:20px;
+      border-left:4px solid #d4a574; line-height:1.6;
+    }
+    .setup-instructions{
+      background: rgba(214,233,240,.85); color:#3a5a6b; padding:20px; border-radius:8px; margin:20px; border-left:4px solid #6b9fc7;
+    }
+    .setup-instructions h3{ margin:0 0 8px; }
+    .setup-instructions code{ background: rgba(107,159,199,.2); padding:2px 6px; border-radius:4px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  </style>
 </head>
 <body>
-    <div class="calendar-container">
-        <div class="calendar-header">
-            <button class="nav-button" onclick="previousMonth()">‹</button>
-            <div>
-                <div class="month-year" id="monthYear"></div>
-                <div class="view-controls">
-                    <button class="view-button active" onclick="switchView('month')">月</button>
-                    <button class="view-button" onclick="switchView('week')">週</button>
-                    <button class="view-button" onclick="switchView('agenda')">予定</button>
-                </div>
-            </div>
-            <button class="nav-button" onclick="nextMonth()">›</button>
-            <button class="nav-button" onclick="goToToday()">今日</button>
+  <div class="calendar-container">
+    <div class="calendar-header">
+      <button class="nav-button" onclick="previousMonth()">‹</button>
+      <div>
+        <div class="month-year" id="monthYear"></div>
+        <div class="view-controls">
+          <button class="view-button active" onclick="switchView('month')">月</button>
+          <button class="view-button" onclick="switchView('agenda')">予定</button>
         </div>
-
-        <div id="loading" class="loading">カレンダーを読み込み中...</div>
-        <div id="error" class="error-message" style="display: none;"></div>
-        
-        <!-- セットアップ説明 -->
-        <div id="setupInstructions" class="setup-instructions" style="display: none;">
-            <h3>🔧 セットアップ手順</h3>
-            <ol>
-                <li><strong>APIキーを取得:</strong> <a href="https://console.cloud.google.com/" target="_blank" style="color: #ecf0f1;">Google Cloud Console</a> でGoogle Calendar APIを有効化し、APIキーを作成</li>
-                <li><strong>APIキー制限:</strong> HTTPリファラーに以下を追加:
-                    <br><code>https://ame-chapchap.github.io/*</code>
-                    <br><code>http://localhost:*</code> (テスト用)
-                </li>
-                <li><strong>カレンダー公開:</strong> Google Calendarで対象カレンダーを一般公開に設定</li>
-                <li><strong>コード更新:</strong> <code>apiKey</code> 変数に取得したAPIキーを設定</li>
-            </ol>
-            
-            <h3>🧪 ブラウザでの直接テスト</h3>
-            <p>以下のリンクをクリックして、ブラウザで直接APIにアクセスできるかテストしてください：</p>
-            <p><a href="https://www.googleapis.com/calendar/v3/calendars/isalang.2ain@gmail.com?key=AIzaSyD7nOJVgpjuqu6-LjXDq7UNRBUGcCT3dDE" target="_blank" style="color: #ecf0f1; word-break: break-all;">
-                📅 カレンダー情報を取得
-            </a></p>
-            <p><a href="https://www.googleapis.com/calendar/v3/calendars/isalang.2ain@gmail.com/events?key=AIzaSyD7nOJVgpjuqu6-LjXDq7UNRBUGcCT3dDE" target="_blank" style="color: #ecf0f1; word-break: break-all;">
-                📋 イベント一覧を取得
-            </a></p>
-            <p><small>※ このリンクで JSON データが表示されれば API は正常に動作しています</small></p>
-        </div>
-
-        <div id="monthView" class="calendar-view active">
-            <div class="calendar-grid" id="calendarGrid">
-                <!-- カレンダーグリッドがここに生成されます -->
-            </div>
-        </div>
-
-        <div id="weekView" class="week-view">
-            <div class="week-header">
-                <div class="time-column">時間</div>
-                <div class="day-header" id="weekDay0">月</div>
-                <div class="day-header" id="weekDay1">火</div>
-                <div class="day-header" id="weekDay2">水</div>
-                <div class="day-header" id="weekDay3">木</div>
-                <div class="day-header" id="weekDay4">金</div>
-                <div class="day-header" id="weekDay5">土</div>
-                <div class="day-header" id="weekDay6">日</div>
-            </div>
-            <div class="week-grid">
-                <div class="week-time-column">
-                    <div class="week-time-slot">6:00</div>
-                    <div class="week-time-slot">7:00</div>
-                    <div class="week-time-slot">8:00</div>
-                    <div class="week-time-slot">9:00</div>
-                    <div class="week-time-slot">10:00</div>
-                    <div class="week-time-slot">11:00</div>
-                    <div class="week-time-slot">12:00</div>
-                    <div class="week-time-slot">13:00</div>
-                    <div class="week-time-slot">14:00</div>
-                    <div class="week-time-slot">15:00</div>
-                    <div class="week-time-slot">16:00</div>
-                    <div class="week-time-slot">17:00</div>
-                    <div class="week-time-slot">18:00</div>
-                    <div class="week-time-slot">19:00</div>
-                    <div class="week-time-slot">20:00</div>
-                    <div class="week-time-slot">21:00</div>
-                    <div class="week-time-slot">22:00</div>
-                    <div class="week-time-slot">23:00</div>
-                </div>
-                <div class="week-day-column" id="weekColumn0"></div>
-                <div class="week-day-column" id="weekColumn1"></div>
-                <div class="week-day-column" id="weekColumn2"></div>
-                <div class="week-day-column" id="weekColumn3"></div>
-                <div class="week-day-column" id="weekColumn4"></div>
-                <div class="week-day-column" id="weekColumn5"></div>
-                <div class="week-day-column" id="weekColumn6"></div>
-            </div>
-        </div>
-
-        <div id="agendaView" class="agenda-view">
-            <div id="agendaContainer">
-                <!-- 予定表示がここに生成されます -->
-            </div>
-        </div>
+      </div>
+      <button class="nav-button" onclick="nextMonth()">›</button>
+      <button class="nav-button" onclick="goToToday()">今日</button>
     </div>
 
-    <div id="tooltip" class="tooltip"></div>
+    <div id="loading" class="loading">カレンダーを読み込み中...</div>
+    <div id="error" class="error-message" style="display:none;"></div>
 
-    <!-- イベント詳細モーダル -->
-    <div id="eventModal" class="event-modal">
-        <div class="event-modal-content">
-            <button class="event-modal-close" onclick="closeEventModal()">&times;</button>
-            <div class="event-modal-title" id="modalTitle">イベントタイトル</div>
-            <div class="event-modal-details" id="modalDetails">
-                <!-- イベント詳細がここに表示されます -->
-            </div>
-        </div>
+    <!-- セットアップ説明（APIトラブル時に表示） -->
+    <div id="setupInstructions" class="setup-instructions" style="display:none;">
+      <h3>🔧 セットアップ手順</h3>
+      <ol>
+        <li><strong>APIキーを取得:</strong> <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> でCalendar APIを有効化しキーを作成</li>
+        <li><strong>APIキー制限:</strong> HTTPリファラーに
+          <code>https://ame-chapchap.github.io/*</code> と <code>http://localhost:*</code> を追加
+        </li>
+        <li><strong>カレンダー公開:</strong> 対象カレンダーを一般公開に設定</li>
+        <li><strong>コード更新:</strong> <code>apiKey</code> に取得したキーを設定</li>
+      </ol>
     </div>
 
-    <script>
-        // API設定
-        let apiKey = 'AIzaSyD7nOJVgpjuqu6-LjXDq7UNRBUGcCT3dDE';
-        const calendarId = 'isalang.2ain@gmail.com';
-        
-        // APIキー検証
-        function validateApiKey() {
-            if (apiKey === 'YOUR_API_KEY_HERE' || !apiKey || apiKey.length < 30) {
-                showError('APIキーが設定されていません。正しいAPIキーを設定してください。');
-                return false;
-            }
-            return true;
+    <!-- 月ビュー -->
+    <div id="monthView" class="calendar-view active">
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+
+    <!-- 予定（Agenda）ビュー -->
+    <div id="agendaView" class="agenda-view">
+      <div id="agendaContainer"></div>
+    </div>
+  </div>
+
+  <div id="tooltip" class="tooltip"></div>
+
+  <!-- イベント詳細モーダル -->
+  <div id="eventModal" class="event-modal">
+    <div class="event-modal-content">
+      <button class="event-modal-close" onclick="closeEventModal()">&times;</button>
+      <div class="event-modal-title" id="modalTitle">イベントタイトル</div>
+      <div class="event-modal-details" id="modalDetails"></div>
+    </div>
+  </div>
+
+  <script>
+    // ===== API設定 =====
+    let apiKey = 'AIzaSyD7nOJVgpjuqu6-LjXDq7UNRBUGcCT3dDE';
+    const calendarId = 'isalang.2ain@gmail.com';
+
+    function validateApiKey(){
+      if (!apiKey || apiKey === 'YOUR_API_KEY_HERE' || apiKey.length < 30){
+        showError('APIキーが設定されていません。正しいAPIキーを設定してください。');
+        return false;
+      }
+      return true;
+    }
+
+    // ===== 状態 =====
+    let currentDate = new Date();
+    let currentView = 'month';
+    let events = [];
+
+    // 日本語表記
+    const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+    const dayNames   = ['月','火','水','木','金','土','日'];
+
+    document.addEventListener('DOMContentLoaded', loadCalendar);
+
+    // ===== APIから取得 =====
+    async function fetchEvents(startDate, endDate){
+      if(!validateApiKey()) return [];
+      const params = new URLSearchParams({
+        key: apiKey,
+        timeMin: startDate.toISOString(),
+        timeMax: endDate.toISOString(),
+        singleEvents: true,
+        orderBy: 'startTime'
+      });
+      try{
+        const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`;
+        const res = await fetch(url);
+        if(!res.ok){
+          if(res.status===403) throw new Error('APIキーまたはアクセス権限の問題です。キー制限と公開設定を確認してください。');
+          if(res.status===404) throw new Error('カレンダーが見つかりません。カレンダーIDを確認してください。');
+          throw new Error(`API エラー: ${res.status} ${res.statusText}`);
         }
+        const data = await res.json();
+        return data.items || [];
+      }catch(e){
+        showError(`❌ ${e.message}`);
+        return [];
+      }
+    }
 
-        // 現在の状態
-        let currentDate = new Date();
-        let currentView = 'month';
-        let events = [];
+    // ===== 描画フロー =====
+    async function loadCalendar(){
+      showLoading(true); hideError();
+      const start = getCalendarStartDate(currentDate);
+      const end   = getCalendarEndDate(currentDate);
+      events = await fetchEvents(start, end);
+      showLoading(false);
+      updateDisplay();
+    }
 
-        // 日本語の月名と曜日
-        const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
-        const dayNames = ['月', '火', '水', '木', '金', '土', '日'];
+    function updateDisplay(){
+      updateMonthYear();
+      if(currentView==='month') generateMonthView();
+      else if(currentView==='agenda') generateAgendaView();
+    }
 
-        // 初期化
-        document.addEventListener('DOMContentLoaded', function() {
-            loadCalendar();
+    function updateMonthYear(){
+      document.getElementById('monthYear').textContent =
+        `${currentDate.getFullYear()}年 ${monthNames[currentDate.getMonth()]}`;
+    }
+
+    // ===== 月ビュー =====
+    function generateMonthView(){
+      const grid = document.getElementById('calendarGrid');
+      grid.innerHTML = '';
+
+      // 曜日ヘッダー
+      dayNames.forEach(d=>{
+        const h = document.createElement('div');
+        h.className='calendar-header-cell';
+        h.textContent=d;
+        grid.appendChild(h);
+      });
+
+      // セル
+      const startDate = getCalendarStartDate(currentDate);
+      const today = new Date();
+
+      for(let i=0;i<42;i++){
+        const cellDate = new Date(startDate); cellDate.setDate(startDate.getDate()+i);
+        const cell = document.createElement('div'); cell.className='calendar-cell';
+        if(cellDate.getMonth()!==currentDate.getMonth()) cell.classList.add('other-month');
+        if(isSameDay(cellDate,today)) cell.classList.add('today');
+
+        const num = document.createElement('div');
+        num.className='date-number'; num.textContent=cellDate.getDate();
+        cell.appendChild(num);
+
+        getEventsForDate(cellDate).forEach(ev=>{
+          const el = createEventElement(ev,'month'); cell.appendChild(el);
         });
 
-        // Google Calendar API からイベントを取得
-        async function fetchEvents(startDate, endDate) {
-            // APIキー検証
-            if (!validateApiKey()) {
-                return [];
-            }
-
-            const timeMin = startDate.toISOString();
-            const timeMax = endDate.toISOString();
-            
-            const params = new URLSearchParams({
-                key: apiKey,
-                timeMin: timeMin,
-                timeMax: timeMax,
-                singleEvents: true,
-                orderBy: 'startTime'
-            });
-
-            try {
-                const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`;
-                console.log('API URL:', url); // デバッグ用
-                
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => null);
-                    console.error('API Response:', response.status, errorData);
-                    
-                    if (response.status === 403) {
-                        throw new Error('APIキーまたはカレンダーへのアクセス権限がありません。APIキーの制限設定とカレンダーの公開設定を確認してください。');
-                    } else if (response.status === 404) {
-                        throw new Error('カレンダーが見つかりません。カレンダーIDを確認してください。');
-                    } else if (response.status === 400) {
-                        throw new Error('リクエストが無効です。APIキーまたはパラメータを確認してください。');
-                    } else {
-                        throw new Error(`API エラー: ${response.status} ${response.statusText}`);
-                    }
-                }
-
-                const data = await response.json();
-                console.log('取得したイベント数:', data.items ? data.items.length : 0); // デバッグ用
-                return data.items || [];
-            } catch (error) {
-                console.error('イベント取得エラー:', error);
-                showError(`❌ ${error.message}`);
-                return [];
-            }
-        }
-
-        // カレンダーを読み込み
-        async function loadCalendar() {
-            showLoading(true);
-            hideError();
-
-            const startDate = getCalendarStartDate(currentDate);
-            const endDate = getCalendarEndDate(currentDate);
-
-            events = await fetchEvents(startDate, endDate);
-            
-            showLoading(false);
-            updateDisplay();
-        }
-
-        // カレンダーの開始日を取得（月曜始まり）
-        function getCalendarStartDate(date) {
-            const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-            const dayOfWeek = firstDay.getDay();
-            const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-            const startDate = new Date(firstDay);
-            startDate.setDate(firstDay.getDate() - mondayOffset);
-            return startDate;
-        }
-
-        // カレンダーの終了日を取得
-        function getCalendarEndDate(date) {
-            const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-            const dayOfWeek = lastDay.getDay();
-            const sundayOffset = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
-            const endDate = new Date(lastDay);
-            endDate.setDate(lastDay.getDate() + sundayOffset);
-            return endDate;
-        }
-
-        // 表示を更新
-        function updateDisplay() {
-            updateMonthYear();
-            
-            if (currentView === 'month') {
-                generateMonthView();
-            } else if (currentView === 'week') {
-                generateWeekView();
-            } else if (currentView === 'agenda') {
-                generateAgendaView();
-            }
-        }
-
-        // 月年表示を更新
-        function updateMonthYear() {
-            const monthYear = document.getElementById('monthYear');
-            monthYear.textContent = `${currentDate.getFullYear()}年 ${monthNames[currentDate.getMonth()]}`;
-        }
-
-        // 月表示を生成
-        function generateMonthView() {
-            const grid = document.getElementById('calendarGrid');
-            grid.innerHTML = '';
-
-            // 曜日ヘッダー
-            dayNames.forEach(day => {
-                const headerCell = document.createElement('div');
-                headerCell.className = 'calendar-header-cell';
-                headerCell.textContent = day;
-                grid.appendChild(headerCell);
-            });
-
-            // カレンダー日付セル
-            const startDate = getCalendarStartDate(currentDate);
-            const today = new Date();
-
-            for (let i = 0; i < 42; i++) {
-                const cellDate = new Date(startDate);
-                cellDate.setDate(startDate.getDate() + i);
-
-                const cell = document.createElement('div');
-                cell.className = 'calendar-cell';
-                
-                if (cellDate.getMonth() !== currentDate.getMonth()) {
-                    cell.className += ' other-month';
-                }
-                
-                if (isSameDay(cellDate, today)) {
-                    cell.className += ' today';
-                }
-
-                const dateNumber = document.createElement('div');
-                dateNumber.className = 'date-number';
-                dateNumber.textContent = cellDate.getDate();
-                cell.appendChild(dateNumber);
-
-                // その日のイベントを追加
-                const dayEvents = getEventsForDate(cellDate);
-                dayEvents.forEach(event => {
-                    const eventDiv = createEventElement(event, 'month');
-                    cell.appendChild(eventDiv);
-                });
-
-                grid.appendChild(cell);
-            }
-        }
-
-        // 週表示を生成
-        function generateWeekView() {
-            const startOfWeek = getStartOfWeek(currentDate);
-            const today = new Date();
-
-            // 週のヘッダーを更新
-            for (let i = 0; i < 7; i++) {
-                const day = new Date(startOfWeek);
-                day.setDate(startOfWeek.getDate() + i);
-                
-                const dayHeader = document.getElementById(`weekDay${i}`);
-                const dayColumn = document.getElementById(`weekColumn${i}`);
-                
-                dayHeader.textContent = `${dayNames[i]} ${day.getDate()}`;
-                
-                // 今日の列をハイライト
-                if (isSameDay(day, today)) {
-                    dayColumn.classList.add('today');
-                } else {
-                    dayColumn.classList.remove('today');
-                }
-                
-                // 列をクリア
-                dayColumn.innerHTML = '';
-                
-                // 18時間分のタイムスロットを作成
-                for (let hour = 6; hour < 24; hour++) {
-                    const timeSlot = document.createElement('div');
-                    timeSlot.className = 'week-time-slot-day';
-                    dayColumn.appendChild(timeSlot);
-                }
-                
-                // その日のイベントを取得して配置
-                const dayEvents = getEventsForDate(day);
-                dayEvents.forEach(event => {
-                    const eventElement = createWeekEventElement(event);
-                    if (eventElement) {
-                        // イベントの時間に基づいて配置を計算
-                        const startTime = new Date(event.start.dateTime || event.start.date);
-                        if (event.start.dateTime) {
-                            const hour = startTime.getHours();
-                            if (hour >= 6 && hour < 24) {
-                                const slotIndex = hour - 6;
-                                const targetSlot = dayColumn.children[slotIndex];
-                                if (targetSlot) {
-                                    targetSlot.appendChild(eventElement);
-                                }
-                            }
-                        } else {
-                            // 終日イベントは最初のスロットに配置
-                            if (dayColumn.children[0]) {
-                                dayColumn.children[0].appendChild(eventElement);
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        // 週表示用のイベント要素を作成
-        function createWeekEventElement(event) {
-            const eventDiv = document.createElement('div');
-            eventDiv.className = 'week-event';
-
-            const startTime = new Date(event.start.dateTime || event.start.date);
-            
-            let timeStr = '';
-            if (event.start.dateTime) {
-                timeStr = formatTime(startTime);
-            } else {
-                timeStr = '終日';
-            }
-
-            const timeSpan = document.createElement('span');
-            timeSpan.className = 'week-event-time';
-            timeSpan.textContent = timeStr;
-
-            const titleSpan = document.createElement('span');
-            titleSpan.className = 'week-event-title';
-            
-            let title = event.summary || '無題';
-            title = title.split('\n')[0];
-            
-            if (title.length > 15) {
-                titleSpan.textContent = title.substring(0, 15) + '...';
-            } else {
-                titleSpan.textContent = title;
-            }
-
-            eventDiv.appendChild(timeSpan);
-            eventDiv.appendChild(document.createElement('br'));
-            eventDiv.appendChild(titleSpan);
-
-            // イベントクリックで詳細表示
-            eventDiv.addEventListener('click', (e) => {
-                e.stopPropagation();
-                showEventModal(event);
-            });
-
-            return eventDiv;
-        }
-
-        // 予定表示を生成
-        function generateAgendaView() {
-            const container = document.getElementById('agendaContainer');
-            container.innerHTML = '';
-
-            const monthEvents = getEventsForMonth(currentDate);
-            const eventsByDate = groupEventsByDate(monthEvents);
-
-            Object.keys(eventsByDate).sort().forEach(dateStr => {
-                const date = new Date(dateStr);
-                const dateHeader = document.createElement('div');
-                dateHeader.className = 'agenda-date';
-                dateHeader.textContent = `${date.getDate()}日 (${dayNames[date.getDay() === 0 ? 6 : date.getDay() - 1]})`;
-                container.appendChild(dateHeader);
-
-                eventsByDate[dateStr].forEach(event => {
-                    const eventDiv = createEventElement(event, 'agenda');
-                    eventDiv.className = 'agenda-event';
-                    container.appendChild(eventDiv);
-                });
-            });
-        }
-
-        // イベント要素を作成
-        function createEventElement(event, viewType) {
-            const eventDiv = document.createElement('div');
-            eventDiv.className = 'event';
-
-            const startTime = new Date(event.start.dateTime || event.start.date);
-            const endTime = new Date(event.end.dateTime || event.end.date);
-
-            let timeStr = '';
-            if (event.start.dateTime) {
-                timeStr = formatTime(startTime);
-            }
-
-            const timeSpan = document.createElement('span');
-            timeSpan.className = 'event-time';
-            timeSpan.textContent = timeStr;
-
-            const titleSpan = document.createElement('span');
-            titleSpan.className = 'event-title';
-            
-            let title = event.summary || '無題';
-            // 改行が含まれる場合は最初の行のみ
-            title = title.split('\n')[0];
-            
-            // 長いタイトルを切り詰め
-            const maxLength = viewType === 'month' ? (window.innerWidth <= 480 ? 8 : 12) : 50;
-            if (title.length > maxLength) {
-                titleSpan.textContent = title.substring(0, maxLength) + '...';
-                // ツールチップ用の完全タイトルを保存
-                eventDiv.setAttribute('data-full-title', event.summary || '無題');
-            } else {
-                titleSpan.textContent = title;
-            }
-
-            eventDiv.appendChild(timeSpan);
-            eventDiv.appendChild(titleSpan);
-
-            // イベントクリックで詳細表示
-            eventDiv.addEventListener('click', (e) => {
-                e.stopPropagation();
-                showEventModal(event);
-            });
-
-            // ツールチップイベント（短縮されたタイトルのみ）
-            if (eventDiv.getAttribute('data-full-title')) {
-                eventDiv.addEventListener('mouseenter', showTooltip);
-                eventDiv.addEventListener('mouseleave', hideTooltip);
-                eventDiv.addEventListener('mousemove', moveTooltip);
-            }
-
-            return eventDiv;
-        }
-
-        // 指定日のイベントを取得
-        function getEventsForDate(date) {
-            return events.filter(event => {
-                const eventStart = new Date(event.start.dateTime || event.start.date);
-                return isSameDay(eventStart, date);
-            });
-        }
-
-        // 指定月のイベントを取得
-        function getEventsForMonth(date) {
-            return events.filter(event => {
-                const eventStart = new Date(event.start.dateTime || event.start.date);
-                return eventStart.getMonth() === date.getMonth() && 
-                       eventStart.getFullYear() === date.getFullYear();
-            });
-        }
-
-        // イベントを日付でグループ化
-        function groupEventsByDate(events) {
-            const grouped = {};
-            events.forEach(event => {
-                const eventDate = new Date(event.start.dateTime || event.start.date);
-                const dateStr = eventDate.toDateString();
-                if (!grouped[dateStr]) {
-                    grouped[dateStr] = [];
-                }
-                grouped[dateStr].push(event);
-            });
-            return grouped;
-        }
-
-        // 週の開始日を取得（月曜日）
-        function getStartOfWeek(date) {
-            const result = new Date(date);
-            const dayOfWeek = result.getDay();
-            const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-            result.setDate(result.getDate() - diff);
-            return result;
-        }
-
-        // 同じ日かチェック
-        function isSameDay(date1, date2) {
-            return date1.getDate() === date2.getDate() &&
-                   date1.getMonth() === date2.getMonth() &&
-                   date1.getFullYear() === date2.getFullYear();
-        }
-
-        // 時刻をフォーマット
-        function formatTime(date) {
-            const hours = date.getHours().toString().padStart(2, '0');
-            const minutes = date.getMinutes().toString().padStart(2, '0');
-            return `${hours}:${minutes}`;
-        }
-
-        // ナビゲーション関数
-        function previousMonth() {
-            currentDate.setMonth(currentDate.getMonth() - 1);
-            loadCalendar();
-        }
-
-        function nextMonth() {
-            currentDate.setMonth(currentDate.getMonth() + 1);
-            loadCalendar();
-        }
-
-        function goToToday() {
-            currentDate = new Date();
-            loadCalendar();
-        }
-
-        // ビュー切替
-        function switchView(view) {
-            currentView = view;
-            
-            // アクティブボタンを更新
-            document.querySelectorAll('.view-button').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            // すべてのビューを非表示
-            document.querySelectorAll('.calendar-view, .week-view, .agenda-view').forEach(div => {
-                div.classList.remove('active');
-            });
-
-            // 選択されたビューを表示
-            if (view === 'month') {
-                document.getElementById('monthView').classList.add('active');
-            } else if (view === 'week') {
-                document.getElementById('weekView').classList.add('active');
-            } else if (view === 'agenda') {
-                document.getElementById('agendaView').classList.add('active');
-            }
-
-            updateDisplay();
-        }
-
-        // ローディング表示
-        function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'block' : 'none';
-        }
-
-        // エラー表示
-        function showError(message) {
-            const errorDiv = document.getElementById('error');
-            errorDiv.innerHTML = message;
-            errorDiv.style.display = 'block';
-            
-            // APIキー関連のエラーの場合、セットアップ説明を表示
-            if (message.includes('APIキー') || message.includes('API エラー') || message.includes('アクセス権限')) {
-                document.getElementById('setupInstructions').style.display = 'block';
-            }
-        }
-
-        function hideError() {
-            document.getElementById('error').style.display = 'none';
-            document.getElementById('setupInstructions').style.display = 'none';
-        }
-
-        // ツールチップ機能
-        function showTooltip(event) {
-            const tooltip = document.getElementById('tooltip');
-            const fullTitle = event.currentTarget.getAttribute('data-full-title');
-            tooltip.textContent = fullTitle;
-            tooltip.classList.add('show');
-        }
-
-        function hideTooltip(event) {
-            const tooltip = document.getElementById('tooltip');
-            tooltip.classList.remove('show');
-        }
-
-        function moveTooltip(event) {
-            const tooltip = document.getElementById('tooltip');
-            tooltip.style.left = (event.pageX + 10) + 'px';
-            tooltip.style.top = (event.pageY - 30) + 'px';
-        }
-
-        // イベント詳細モーダルを表示
-        function showEventModal(event) {
-            const modal = document.getElementById('eventModal');
-            const title = document.getElementById('modalTitle');
-            const details = document.getElementById('modalDetails');
-
-            // タイトル設定
-            title.textContent = event.summary || '無題のイベント';
-
-            // 詳細情報をクリア
-            details.innerHTML = '';
-
-            // 日時情報
-            const startTime = new Date(event.start.dateTime || event.start.date);
-            const endTime = new Date(event.end.dateTime || event.end.date);
-            
-            let dateTimeStr = '';
-            if (event.start.dateTime && event.end.dateTime) {
-                // 時間指定あり
-                if (isSameDay(startTime, endTime)) {
-                    dateTimeStr = `${formatDate(startTime)} ${formatTime(startTime)} - ${formatTime(endTime)}`;
-                } else {
-                    dateTimeStr = `${formatDate(startTime)} ${formatTime(startTime)} - ${formatDate(endTime)} ${formatTime(endTime)}`;
-                }
-            } else {
-                // 終日イベント
-                if (isSameDay(startTime, endTime) || 
-                    (endTime.getTime() - startTime.getTime() === 24 * 60 * 60 * 1000)) {
-                    dateTimeStr = `${formatDate(startTime)} (終日)`;
-                } else {
-                    const adjustedEndTime = new Date(endTime.getTime() - 24 * 60 * 60 * 1000);
-                    dateTimeStr = `${formatDate(startTime)} - ${formatDate(adjustedEndTime)} (終日)`;
-                }
-            }
-
-            addDetailItem('🕒', '日時', dateTimeStr);
-
-            // 説明（URLをリンクに変換）
-            if (event.description) {
-                const descriptionWithLinks = convertUrlsToLinks(event.description);
-                addDetailItem('📝', '説明', descriptionWithLinks, true);
-            }
-
-            // 場所（URLが含まれている場合はリンクに変換）
-            if (event.location) {
-                const locationWithLinks = convertUrlsToLinks(event.location);
-                addDetailItem('📍', '場所', locationWithLinks, true);
-            }
-
-            // Google Meet / Zoom リンク（conferenceDataから取得）
-            if (event.conferenceData && event.conferenceData.entryPoints) {
-                const videoLinks = event.conferenceData.entryPoints
-                    .filter(entry => entry.entryPointType === 'video')
-                    .map(entry => {
-                        return `<a href="${entry.uri}" target="_blank" rel="noopener noreferrer">${entry.uri}</a>`;
-                    })
-                    .join('<br>');
-                
-                if (videoLinks) {
-                    addDetailItem('🎥', '会議リンク', videoLinks, true);
-                }
-            }
-
-            // 参加者
-            if (event.attendees && event.attendees.length > 0) {
-                const attendeesList = event.attendees.map(attendee => {
-                    let status = '';
-                    switch(attendee.responseStatus) {
-                        case 'accepted': status = ' ✅'; break;
-                        case 'declined': status = ' ❌'; break;
-                        case 'tentative': status = ' ❓'; break;
-                        default: status = ' ⏳'; break;
-                    }
-                    return (attendee.displayName || attendee.email) + status;
-                }).join('<br>');
-                addDetailItem('👥', '参加者', attendeesList);
-            }
-
-            // Google Calendar リンク
-            if (event.htmlLink) {
-                addDetailItem('🔗', 'Google Calendar', `<a href="${event.htmlLink}" target="_blank">${event.htmlLink}</a>`, true);
-            }
-
-            // 作成者
-            if (event.creator && event.creator.displayName) {
-                addDetailItem('👤', '作成者', event.creator.displayName);
-            }
-
-            // モーダル表示
-            modal.classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
-
-        // URLをクリック可能なリンクに変換
-        function convertUrlsToLinks(text) {
-            // 改行をHTMLの<br>に変換
-            let html = text.replace(/\n/g, '<br>');
-            
-            // URLパターンを検出してリンクに変換
-            const urlPattern = /(https?:\/\/[^\s<>"\[\]{}|\\^`]+)/gi;
-            html = html.replace(urlPattern, (url) => {
-                return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
-            });
-            
-            return html;
-        }
-
-        // プラットフォームを検出
-        function detectPlatform(url) {
-            const urlLower = url.toLowerCase();
-            if (urlLower.includes('zoom.')) return 'Zoom';
-            if (urlLower.includes('meet.google.')) return 'Google Meet';
-            if (urlLower.includes('teams.microsoft.')) return 'Microsoft Teams';
-            if (urlLower.includes('webex.')) return 'Webex';
-            if (urlLower.includes('skype.')) return 'Skype';
-            return 'リンク';
-        }
-
-        // 表示テキストを取得
-        function getDisplayText(url, platform) {
-            if (platform === 'Zoom') return '🎥 Zoom会議に参加';
-            if (platform === 'Google Meet') return '🎥 Google Meet会議に参加';
-            if (platform === 'Microsoft Teams') return '🎥 Teams会議に参加';
-            if (platform === 'Webex') return '🎥 Webex会議に参加';
-            if (platform === 'Skype') return '🎥 Skype会議に参加';
-            
-            // 一般的なURL表示（短縮）
-            try {
-                const urlObj = new URL(url);
-                const domain = urlObj.hostname.replace('www.', '');
-                return `🔗 ${domain}`;
-            } catch {
-                return '🔗 リンクを開く';
-            }
-        }
-
-        // 詳細項目を追加
-        function addDetailItem(icon, label, value, isHtml = false) {
-            const details = document.getElementById('modalDetails');
-            const item = document.createElement('div');
-            item.className = 'event-detail-item';
-            
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'event-detail-content';
-            
-            const labelDiv = document.createElement('div');
-            labelDiv.className = 'event-detail-label';
-            labelDiv.textContent = label;
-            
-            const valueDiv = document.createElement('div');
-            valueDiv.className = 'event-detail-value';
-            
-            if (isHtml) {
-                valueDiv.innerHTML = value;
-            } else {
-                valueDiv.textContent = value;
-            }
-            
-            contentDiv.appendChild(labelDiv);
-            contentDiv.appendChild(valueDiv);
-            
-            item.innerHTML = `<div class="event-detail-icon">${icon}</div>`;
-            item.appendChild(contentDiv);
-            
-            details.appendChild(item);
-        }
-
-        // イベント詳細モーダルを閉じる
-        function closeEventModal() {
-            const modal = document.getElementById('eventModal');
-            modal.classList.remove('show');
-            document.body.style.overflow = '';
-        }
-
-        // 日付をフォーマット
-        function formatDate(date) {
-            const year = date.getFullYear();
-            const month = date.getMonth() + 1;
-            const day = date.getDate();
-            const weekday = dayNames[date.getDay() === 0 ? 6 : date.getDay() - 1];
-            return `${year}年${month}月${day}日 (${weekday})`;
-        }
-
-        // モーダル外クリックで閉じる
-        document.addEventListener('click', function(event) {
-            const modal = document.getElementById('eventModal');
-            if (event.target === modal) {
-                closeEventModal();
-            }
+        grid.appendChild(cell);
+      }
+    }
+
+    // ===== 予定ビュー =====
+    function generateAgendaView(){
+      const container = document.getElementById('agendaContainer');
+      container.innerHTML='';
+
+      const monthEvents = getEventsForMonth(currentDate);
+      const grouped = groupEventsByDate(monthEvents);
+
+      Object.keys(grouped).sort().forEach(dateStr=>{
+        const date = new Date(dateStr);
+        const head = document.createElement('div');
+        head.className='agenda-date';
+        head.textContent = `${date.getDate()}日 (${dayNames[date.getDay()===0?6:date.getDay()-1]})`;
+        container.appendChild(head);
+
+        grouped[dateStr].forEach(ev=>{
+          const el = createEventElement(ev,'agenda'); el.className='agenda-event'; container.appendChild(el);
         });
+      });
+    }
 
-        // ESCキーで閉じる
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closeEventModal();
-            }
-        });
-    </script>
+    // ===== イベント要素（共通） =====
+    function createEventElement(event, viewType){
+      const div = document.createElement('div'); div.className='event';
+      const start = new Date(event.start.dateTime || event.start.date);
+
+      const time = document.createElement('span'); time.className='event-time';
+      time.textContent = event.start.dateTime ? formatTime(start) : '';
+      const title = document.createElement('span'); title.className='event-title';
+
+      let t = (event.summary || '無題').split('\n')[0];
+      const max = viewType==='month' ? (window.innerWidth<=480 ? 8 : 12) : 50;
+      title.textContent = t.length>max ? t.slice(0,max)+'…' : t;
+
+      div.appendChild(time); div.appendChild(title);
+
+      div.addEventListener('click', e=>{ e.stopPropagation(); showEventModal(event); });
+
+      if(t.length>max){ div.setAttribute('data-full-title', event.summary||'無題');
+        div.addEventListener('mouseenter', showTooltip);
+        div.addEventListener('mouseleave', hideTooltip);
+        div.addEventListener('mousemove', moveTooltip);
+      }
+      return div;
+    }
+
+    // ===== Utils =====
+    function getCalendarStartDate(date){
+      const first = new Date(date.getFullYear(), date.getMonth(), 1);
+      const dow = first.getDay(); const mondayOffset = dow===0?6:dow-1;
+      const start = new Date(first); start.setDate(first.getDate()-mondayOffset); return start;
+    }
+    function getCalendarEndDate(date){
+      const last = new Date(date.getFullYear(), date.getMonth()+1, 0);
+      const dow = last.getDay(); const sundayOffset = dow===0?0:7-dow;
+      const end = new Date(last); end.setDate(last.getDate()+sundayOffset); return end;
+    }
+    function getEventsForDate(d){
+      return events.filter(ev=>{
+        const s = new Date(ev.start.dateTime || ev.start.date);
+        return isSameDay(s,d);
+      });
+    }
+    function getEventsForMonth(d){
+      return events.filter(ev=>{
+        const s = new Date(ev.start.dateTime || ev.start.date);
+        return s.getMonth()===d.getMonth() && s.getFullYear()===d.getFullYear();
+      });
+    }
+    function groupEventsByDate(list){
+      const g={}; list.forEach(ev=>{
+        const dt = new Date(ev.start.dateTime || ev.start.date).toDateString();
+        (g[dt] ||= []).push(ev);
+      }); return g;
+    }
+    function isSameDay(a,b){ return a.getDate()===b.getDate() && a.getMonth()===b.getMonth() && a.getFullYear()===b.getFullYear(); }
+    function formatTime(d){ return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+
+    // ===== ナビゲーション =====
+    function previousMonth(){ currentDate.setMonth(currentDate.getMonth()-1); loadCalendar(); }
+    function nextMonth(){ currentDate.setMonth(currentDate.getMonth()+1); loadCalendar(); }
+    function goToToday(){ currentDate = new Date(); loadCalendar(); }
+
+    // ===== ビュー切替（「月」「予定」だけ） =====
+    function switchView(view){
+      currentView = view;
+      document.querySelectorAll('.view-button').forEach(b=>b.classList.remove('active'));
+      event.target.classList.add('active');
+      document.querySelectorAll('.calendar-view, .agenda-view').forEach(v=>v.classList.remove('active'));
+      if(view==='month') document.getElementById('monthView').classList.add('active');
+      else if(view==='agenda') document.getElementById('agendaView').classList.add('active');
+      updateDisplay();
+    }
+
+    // ===== Loading / Error =====
+    function showLoading(show){ document.getElementById('loading').style.display = show ? 'block':'none'; }
+    function showError(msg){
+      const el = document.getElementById('error'); el.innerHTML = msg; el.style.display='block';
+      if (msg.includes('APIキー') || msg.includes('API エラー') || msg.includes('アクセス権限')){
+        document.getElementById('setupInstructions').style.display='block';
+      }
+    }
+    function hideError(){ document.getElementById('error').style.display='none'; document.getElementById('setupInstructions').style.display='none'; }
+
+    // ===== Tooltip =====
+    function showTooltip(e){
+      const tip = document.getElementById('tooltip');
+      tip.textContent = e.currentTarget.getAttribute('data-full-title');
+      tip.classList.add('show');
+    }
+    function hideTooltip(){ document.getElementById('tooltip').classList.remove('show'); }
+    function moveTooltip(e){
+      const tip = document.getElementById('tooltip');
+      tip.style.left = (e.pageX + 10) + 'px';
+      tip.style.top  = (e.pageY - 30) + 'px';
+    }
+
+    // ===== Modal =====
+    function showEventModal(ev){
+      const modal = document.getElementById('eventModal');
+      const title = document.getElementById('modalTitle');
+      const details = document.getElementById('modalDetails');
+      title.textContent = ev.summary || '無題のイベント';
+      details.innerHTML = '';
+
+      const s = new Date(ev.start.dateTime || ev.start.date);
+      const e = new Date(ev.end.dateTime || ev.end.date);
+      let when='';
+      if(ev.start.dateTime && ev.end.dateTime){
+        when = isSameDay(s,e) ? `${formatDate(s)} ${formatTime(s)} - ${formatTime(e)}`
+                               : `${formatDate(s)} ${formatTime(s)} - ${formatDate(e)} ${formatTime(e)}`;
+      }else{
+        if(isSameDay(s,e) || (e - s === 24*60*60*1000)) when = `${formatDate(s)} (終日)`;
+        else { const adj = new Date(e.getTime() - 24*60*60*1000); when = `${formatDate(s)} - ${formatDate(adj)} (終日)`; }
+      }
+      addDetailItem('🕒','日時',when);
+
+      if(ev.description) addDetailItem('📝','説明',convertUrlsToLinks(ev.description),true);
+      if(ev.location)    addDetailItem('📍','場所',convertUrlsToLinks(ev.location),true);
+      if(ev.conferenceData && ev.conferenceData.entryPoints){
+        const links = ev.conferenceData.entryPoints.filter(x=>x.entryPointType==='video')
+          .map(x=>`<a href="${x.uri}" target="_blank" rel="noopener noreferrer">${x.uri}</a>`).join('<br>');
+        if(links) addDetailItem('🎥','会議リンク',links,true);
+      }
+      if(ev.attendees && ev.attendees.length){
+        const list = ev.attendees.map(a=>{
+          const map={accepted:' ✅',declined:' ❌',tentative:' ❓'}; return (a.displayName||a.email)+(map[a.responseStatus]||' ⏳');
+        }).join('<br>');
+        addDetailItem('👥','参加者',list);
+      }
+      if(ev.htmlLink) addDetailItem('🔗','Google Calendar',`<a href="${ev.htmlLink}" target="_blank">${ev.htmlLink}</a>`,true);
+      if(ev.creator && ev.creator.displayName) addDetailItem('👤','作成者',ev.creator.displayName);
+
+      modal.classList.add('show'); document.body.style.overflow='hidden';
+    }
+    function addDetailItem(icon,label,value,isHtml=false){
+      const wrap = document.createElement('div'); wrap.className='event-detail-item';
+      wrap.innerHTML = `<div class="event-detail-icon">${icon}</div>`;
+      const content = document.createElement('div'); content.className='event-detail-content';
+      const l = document.createElement('div'); l.className='event-detail-label'; l.textContent=label;
+      const v = document.createElement('div'); v.className='event-detail-value';
+      if(isHtml) v.innerHTML=value; else v.textContent=value;
+      content.appendChild(l); content.appendChild(v); wrap.appendChild(content);
+      document.getElementById('modalDetails').appendChild(wrap);
+    }
+    function closeEventModal(){ document.getElementById('eventModal').classList.remove('show'); document.body.style.overflow=''; }
+    function formatDate(d){
+      const y=d.getFullYear(), m=d.getMonth()+1, day=d.getDate();
+      const w = dayNames[d.getDay()===0?6:d.getDay()-1];
+      return `${y}年${m}月${day}日 (${w})`;
+    }
+
+    function convertUrlsToLinks(text){
+      let html = text.replace(/\n/g,'<br>');
+      const urlPattern = /(https?:\/\/[^\s<>"\[\]{}|\\^`]+)/gi;
+      return html.replace(urlPattern, url=>`<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+    }
+  </script>
 </body>
 </html>
