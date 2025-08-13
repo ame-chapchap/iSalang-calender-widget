@@ -128,6 +128,8 @@
             font-weight: 600;
             font-size: 14px;
             color: #495057;
+            min-width: 0;
+            flex: 1;
         }
 
         .calendar-cell {
@@ -137,6 +139,8 @@
             position: relative;
             display: flex;
             flex-direction: column;
+            min-width: 0;
+            flex: 1;
         }
 
         .date-number {
@@ -290,6 +294,15 @@
             .calendar-cell {
                 min-height: 70px;
                 padding: 4px 2px;
+                min-width: 0;
+                width: 100%;
+            }
+
+            .day-header {
+                padding: 8px 2px;
+                font-size: 12px;
+                min-width: 0;
+                width: 100%;
             }
 
             .date-number {
