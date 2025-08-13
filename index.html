@@ -24,7 +24,7 @@
             max-width: none;
             margin: 0;
             padding: 12px;
-            height: 100vh;
+            height: 90vh;
             display: flex;
             flex-direction: column;
         }
@@ -126,7 +126,7 @@
         @media (max-width: 768px) {
             .calendar-container {
                 padding: 8px;
-                height: 100vh;
+                height: 85vh;
             }
 
             .calendar-title {
@@ -136,7 +136,7 @@
             .calendar-header {
                 flex-direction: column;
                 align-items: stretch;
-                margin-bottom: 12px;
+                margin-bottom: 8px;
             }
 
             .view-toggle {
@@ -223,7 +223,7 @@
             </div>
             <iframe id="calendar-iframe" 
                     class="calendar-iframe"
-                    src="https://calendar.google.com/calendar/embed?wkst=2&bgcolor=%23ffffff&ctz=Asia%2FTokyo&src=isalang.2ain%40gmail.com&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&mode=MONTH"
+                    src="https://calendar.google.com/calendar/embed?wkst=2&bgcolor=%23ffffff&ctz=Asia%2FTokyo&src=isalang.2ain%40gmail.com&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&showTz=0&mode=MONTH"
                     scrolling="no"
                     onload="hideLoading()">
             </iframe>
@@ -232,7 +232,7 @@
 
     <script>
         let currentView = 'month';
-        const baseCalendarUrl = 'https://calendar.google.com/calendar/embed?wkst=2&bgcolor=%23ffffff&ctz=Asia%2FTokyo&src=isalang.2ain%40gmail.com&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0';
+        const baseCalendarUrl = 'https://calendar.google.com/calendar/embed?wkst=2&bgcolor=%23ffffff&ctz=Asia%2FTokyo&src=isalang.2ain%40gmail.com&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&showTz=0';
         
         // デバイス判定
         function isMobile() {
@@ -266,10 +266,10 @@
                 'agenda': 'AGENDA'
             };
             
-            // スマホの月表示では時間を非表示にしてタイトルのみ表示
+            // スマホの月表示ではタイトル優先設定
             let extraParams = '';
             if (isMobile() && currentView === 'month') {
-                extraParams = '&showTime=0'; // 時間を非表示
+                extraParams = '&showCalendars=0&showTz=0&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&hl=ja&eventDisplay=block&eventDetails=1&eventTime=0';
             }
             
             // 新しいURLを構築
