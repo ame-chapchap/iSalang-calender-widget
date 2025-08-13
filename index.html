@@ -1,10 +1,4 @@
-.calendar-view {
-            display: none;
-        }
-
-        .calendar-view.active {
-            display: block;
-        }        .calendar-header<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -36,6 +30,14 @@
             overflow: hidden;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .calendar-view {
+            display: none;
+        }
+
+        .calendar-view.active {
+            display: block;
         }
 
         .calendar-header {
@@ -153,7 +155,7 @@
         }
 
         .calendar-cell.other-month .event {
-            background: linear-gradient(135deg, rgba(149, 165, 166, 0.4) 0%, rgba(127, 140, 141, 0.5) 100%);
+            background: linear-gradient(135deg, rgba(149, 165, 166, 0.2) 0%, rgba(127, 140, 141, 0.3) 100%);
             color: rgba(255, 255, 255, 0.8);
             opacity: 0.7;
             box-shadow: 0 1px 4px rgba(149, 165, 166, 0.2);
@@ -166,8 +168,8 @@
         }
 
         .calendar-cell.today {
-            background: linear-gradient(135deg, #a8e6cf 0%, #88d8a3 100%);
-            box-shadow: 0 4px 15px rgba(168, 230, 207, 0.4);
+            background: linear-gradient(135deg, rgba(168, 230, 207, 0.4) 0%, rgba(136, 216, 163, 0.5) 100%);
+            box-shadow: 0 4px 15px rgba(168, 230, 207, 0.2);
         }
 
         .date-number {
@@ -178,7 +180,7 @@
         }
 
         .event {
-            background: linear-gradient(135deg, rgba(66, 165, 245, 0.8) 0%, rgba(42, 132, 228, 0.9) 100%);
+            background: linear-gradient(135deg, rgba(66, 165, 245, 0.4) 0%, rgba(42, 132, 228, 0.5) 100%);
             color: white;
             font-size: 11px;
             padding: 4px 6px;
@@ -190,13 +192,13 @@
             transition: all 0.3s ease;
             backdrop-filter: blur(5px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 2px 8px rgba(66, 165, 245, 0.3);
+            box-shadow: 0 2px 8px rgba(66, 165, 245, 0.15);
         }
 
         .event:hover {
-            background: linear-gradient(135deg, rgba(66, 165, 245, 1) 0%, rgba(42, 132, 228, 1) 100%);
+            background: linear-gradient(135deg, rgba(66, 165, 245, 0.8) 0%, rgba(42, 132, 228, 0.9) 100%);
             transform: translateY(-1px) scale(1.02);
-            box-shadow: 0 4px 15px rgba(66, 165, 245, 0.5);
+            box-shadow: 0 4px 15px rgba(66, 165, 245, 0.3);
         }
 
         .event-time {
@@ -284,7 +286,7 @@
         }
 
         .week-day-column.today {
-            background: rgba(154, 205, 223, 0.2);
+            background: rgba(173, 216, 230, 0.15);
         }
 
         .week-time-slot-day {
@@ -295,7 +297,7 @@
         }
 
         .week-event {
-            background: rgba(154, 205, 223, 0.4);
+            background: rgba(154, 205, 223, 0.25);
             color: #3a5a6b;
             padding: 4px 8px;
             border-radius: 4px;
@@ -307,7 +309,7 @@
         }
 
         .week-event:hover {
-            background: rgba(154, 205, 223, 0.6);
+            background: rgba(154, 205, 223, 0.4);
             transform: translateY(-1px);
         }
 
@@ -334,7 +336,7 @@
         }
 
         .agenda-event {
-            background: rgba(154, 205, 223, 0.4);
+            background: rgba(154, 205, 223, 0.25);
             color: #3a5a6b;
             padding: 16px;
             border-radius: 8px;
@@ -346,9 +348,9 @@
         }
 
         .agenda-event:hover {
-            background: rgba(154, 205, 223, 0.6);
+            background: rgba(154, 205, 223, 0.4);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(107, 159, 199, 0.2);
+            box-shadow: 0 4px 12px rgba(107, 159, 199, 0.15);
         }
 
         .agenda-date {
@@ -546,7 +548,9 @@
         .event-detail-value a:hover {
             color: #2980b9;
             text-decoration: underline;
-        }detail-value a:before {
+        }
+
+        .event-detail-value a:before {
             content: '';
             position: absolute;
             top: 0;
