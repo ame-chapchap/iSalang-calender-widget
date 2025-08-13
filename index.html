@@ -85,7 +85,7 @@
 
         .calendar-iframe {
             width: 100%;
-            height: 650px;
+            height: 750px;
             border: none;
             display: block;
         }
@@ -209,12 +209,11 @@
         <div class="calendar-header">
             <h1 class="calendar-title">
                 <span>📅</span>
-                <span>カレンダー</span>
             </h1>
             <div class="view-toggle">
-                <button class="view-btn" onclick="switchView('month')" title="月表示">月</button>
+                <button class="view-btn active" onclick="switchView('month')" title="月表示">月</button>
                 <button class="view-btn" onclick="switchView('week')" title="週表示">週</button>
-                <button class="view-btn active" onclick="switchView('agenda')" title="予定一覧">予定</button>
+                <button class="view-btn" onclick="switchView('agenda')" title="予定一覧">予定</button>
             </div>
         </div>
 
@@ -224,7 +223,7 @@
             </div>
             <iframe id="calendar-iframe" 
                     class="calendar-iframe"
-                    src="https://calendar.google.com/calendar/embed?height=650&wkst=2&bgcolor=%23ffffff&ctz=Asia%2FTokyo&src=isalang.2ain%40gmail.com&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&mode=AGENDA"
+                    src="https://calendar.google.com/calendar/embed?height=750&wkst=2&bgcolor=%23ffffff&ctz=Asia%2FTokyo&src=isalang.2ain%40gmail.com&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&mode=MONTH"
                     scrolling="no"
                     onload="hideLoading()">
             </iframe>
@@ -232,8 +231,8 @@
     </div>
 
     <script>
-        let currentView = 'agenda';
-        const baseCalendarUrl = 'https://calendar.google.com/calendar/embed?height=650&wkst=2&bgcolor=%23ffffff&ctz=Asia%2FTokyo&src=isalang.2ain%40gmail.com&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0';
+        let currentView = 'month';
+        const baseCalendarUrl = 'https://calendar.google.com/calendar/embed?height=750&wkst=2&bgcolor=%23ffffff&ctz=Asia%2FTokyo&src=isalang.2ain%40gmail.com&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0';
         
         // デバイス判定
         function isMobile() {
@@ -267,8 +266,17 @@
                 'agenda': 'AGENDA'
             };
             
+            // スマホの月表示ではタイトルが見えるように特別設定
+            let displayMode = modeMap[currentView];
+            let extraParams = '';
+            
+            if (isMobile() && currentView === 'month') {
+                // スマホの月表示では、イベントタイトルが見えるように詳細を表示
+                extraParams = '&details=1';
+            }
+            
             // 新しいURLを構築
-            const newSrc = baseCalendarUrl + '&mode=' + modeMap[currentView];
+            const newSrc = baseCalendarUrl + '&mode=' + displayMode + extraParams;
             
             // iframeのsrcを更新
             iframe.src = newSrc;
@@ -285,6 +293,19 @@
         window.addEventListener('load', function() {
             // 初回ローディングを非表示
             setTimeout(hideLoading, 1000);
+            
+            // 初回表示時にスマホなら表示を調整
+            if (isMobile()) {
+                updateCalendarView();
+            }
+        });
+
+        // 画面サイズ変更時の対応
+        window.addEventListener('resize', function() {
+            // デバイスタイプが変わった場合は表示を更新
+            if (currentView === 'month') {
+                updateCalendarView();
+            }
         });
 
         // エラーハンドリング
