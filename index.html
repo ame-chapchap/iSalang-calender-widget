@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Googleカレンダー - Notion用</title>
+    <title>Google Calendar Widget</title>
     <style>
         * {
             margin: 0;
@@ -13,379 +13,865 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #ffffff;
-            color: #37352f;
-            line-height: 1.5;
+            background: linear-gradient(135deg, #e8f4f8 0%, #f0f8e8 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        .widget-container {
-            padding: 16px;
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            max-width: 100%;
-            overflow: hidden;
+        .calendar-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
         }
 
-        .header {
+        .calendar-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #e5e5e5;
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            backdrop-filter: blur(15px);
         }
 
-        .header h2 {
-            font-size: 18px;
-            font-weight: 600;
-            color: #37352f;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .nav-button {
+            background: linear-gradient(135deg, #a8e6cf 0%, #88d8a3 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            transition: all 0.3s ease;
+            min-height: 44px;
+            min-width: 44px;
         }
 
-        .calendar-icon {
-            width: 20px;
-            height: 20px;
-            background: #4285f4;
-            border-radius: 4px;
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(168, 230, 207, 0.4);
+        }
+
+        .month-year {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+            flex: 1;
+            margin: 0 20px;
+        }
+
+        .view-controls {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .view-button {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
             font-size: 12px;
+            color: #2c3e50;
+            transition: all 0.3s ease;
+            min-height: 44px;
+        }
+
+        .view-button.active {
+            background: linear-gradient(135deg, #a8e6cf 0%, #88d8a3 100%);
             font-weight: bold;
         }
 
-        .setup-section {
-            background: #f8f9fa;
-            border: 1px solid #e5e5e5;
-            border-radius: 6px;
-            padding: 16px;
-            margin-bottom: 16px;
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 10px;
         }
 
-        .setup-title {
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: #37352f;
-        }
-
-        .input-group {
-            margin-bottom: 12px;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 4px;
-            color: #37352f;
-        }
-
-        .input-group input, .input-group select {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 14px;
-            background: white;
-        }
-
-        .input-group input:focus, .input-group select:focus {
-            outline: none;
-            border-color: #4285f4;
-            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.1);
-        }
-
-        .button {
-            background: #4285f4;
+        .calendar-header-cell {
+            background: rgba(66, 165, 245, 0.7);
             color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
+            text-align: center;
+            padding: 15px 5px;
+            font-weight: bold;
+            font-size: 12px;
+            border-radius: 10px;
+        }
+
+        .calendar-cell {
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+            padding: 5px;
+            min-height: 90px;
+            position: relative;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .calendar-cell:hover {
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(1.02);
+        }
+
+        .calendar-cell.other-month {
+            background: rgba(255, 255, 255, 0.1);
+            color: #95a5a6;
+        }
+
+        .calendar-cell.today {
+            background: linear-gradient(135deg, #a8e6cf 0%, #88d8a3 100%);
+            box-shadow: 0 4px 15px rgba(168, 230, 207, 0.4);
+        }
+
+        .date-number {
             font-size: 14px;
-            font-weight: 500;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 3px;
+        }
+
+        .event {
+            background: rgba(66, 165, 245, 0.7);
+            color: white;
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            margin-bottom: 1px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s ease;
         }
 
-        .button:hover {
-            background: #3367d6;
+        .event:hover {
+            background: rgba(66, 165, 245, 0.9);
+            transform: scale(1.05);
         }
 
-        .button:disabled {
-            background: #9aa0a6;
-            cursor: not-allowed;
+        .event-time {
+            font-weight: bold;
+            display: block;
+            font-size: 9px;
         }
 
-        .calendar-frame {
-            width: 100%;
-            height: 500px;
-            border: 1px solid #e5e5e5;
-            border-radius: 6px;
-            background: #f8f9fa;
+        .event-title {
+            font-size: 9px;
+            line-height: 1.2;
+            word-break: break-word;
+        }
+
+        .week-view, .agenda-view {
             display: none;
         }
 
-        .instructions {
-            background: #e8f0fe;
-            border: 1px solid #dadce0;
-            border-radius: 6px;
-            padding: 12px;
-            margin-top: 16px;
-            font-size: 13px;
-            line-height: 1.4;
+        .week-view.active, .agenda-view.active {
+            display: block;
         }
 
-        .instructions h4 {
-            margin-bottom: 8px;
-            color: #1a73e8;
+        .week-day {
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            backdrop-filter: blur(5px);
         }
 
-        .instructions ol {
-            margin-left: 16px;
+        .week-day-header {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(66, 165, 245, 0.3);
         }
 
-        .instructions li {
-            margin-bottom: 4px;
-        }
-
-        .view-options {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .view-btn {
-            padding: 6px 12px;
-            border: 1px solid #d1d5db;
-            background: white;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .view-btn.active {
-            background: #4285f4;
+        .agenda-event {
+            background: rgba(66, 165, 245, 0.7);
             color: white;
-            border-color: #4285f4;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .agenda-date {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 20px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid rgba(168, 230, 207, 0.5);
         }
 
         .error-message {
-            background: #fef7f0;
-            border: 1px solid #f9cb9c;
-            color: #d93025;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            margin-top: 12px;
-            display: none;
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            margin: 20px 0;
+            border-left: 5px solid #c0392b;
+            backdrop-filter: blur(10px);
+            line-height: 1.6;
         }
 
+        .setup-instructions {
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #2980b9;
+            backdrop-filter: blur(10px);
+        }
+
+        .setup-instructions h3 {
+            margin-top: 0;
+            color: #ecf0f1;
+        }
+
+        .setup-instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .setup-instructions li {
+            margin: 8px 0;
+        }
+
+        .setup-instructions code {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #2c3e50;
+        }
+
+        /* ツールチップ */
+        .tooltip {
+            position: absolute;
+            background: rgba(44, 62, 80, 0.95);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 1000;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        /* レスポンシブデザイン */
         @media (max-width: 768px) {
-            .widget-container {
-                padding: 12px;
+            .calendar-container {
+                padding: 10px;
             }
             
-            .calendar-frame {
-                height: 400px;
+            .calendar-cell {
+                min-height: 80px;
+            }
+            
+            .month-year {
+                font-size: 20px;
+                margin: 0 10px;
+            }
+            
+            .nav-button {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .calendar-cell {
+                min-height: 60px;
+                padding: 3px;
+            }
+            
+            .event {
+                font-size: 8px;
+                padding: 1px 2px;
+            }
+            
+            .event-title {
+                font-size: 8px;
+            }
+            
+            .event-time {
+                font-size: 7px;
+            }
+            
+            .date-number {
+                font-size: 12px;
+            }
+            
+            .month-year {
+                font-size: 18px;
+            }
+            
+            .calendar-header-cell {
+                padding: 10px 2px;
+                font-size: 10px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="widget-container">
-        <div class="header">
-            <h2>
-                <div class="calendar-icon">📅</div>
-                Googleカレンダー
-            </h2>
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <button class="nav-button" onclick="previousMonth()">‹</button>
+            <div>
+                <div class="month-year" id="monthYear"></div>
+                <div class="view-controls">
+                    <button class="view-button active" onclick="switchView('month')">月</button>
+                    <button class="view-button" onclick="switchView('week')">週</button>
+                    <button class="view-button" onclick="switchView('agenda')">予定</button>
+                    <button class="view-button" onclick="testApiConnection()" style="background: rgba(255, 193, 7, 0.8);">テスト</button>
+                </div>
+            </div>
+            <button class="nav-button" onclick="nextMonth()">›</button>
+            <button class="nav-button" onclick="goToToday()">今日</button>
         </div>
 
-        <div class="setup-section" style="display: none;">
-            <div class="setup-title">カレンダー設定</div>
-            
-            <div class="input-group">
-                <label for="calendar-id">カレンダーID</label>
-                <input 
-                    type="text" 
-                    id="calendar-id" 
-                    placeholder="例: your-email@gmail.com または カレンダーID"
-                    value="isalang.2ain@gmail.com"
-                >
-            </div>
-
-            <div class="view-options">
-                <button class="view-btn active" data-view="MONTH">月表示</button>
-                <button class="view-btn" data-view="WEEK">週表示</button>
-                <button class="view-btn" data-view="AGENDA">予定表</button>
-            </div>
-
-            <div style="display: flex; gap: 12px; align-items: center;">
-                <button class="button" onclick="loadCalendar()">カレンダーを表示</button>
-                <button class="button" onclick="toggleSetup()" style="background: #6c757d;">設定を表示</button>
-            </div>
-
-            <div class="error-message" id="error-message"></div>
-        </div>
-
-        <iframe 
-            id="calendar-frame" 
-            class="calendar-frame"
-            frameborder="0" 
-            scrolling="no">
-        </iframe>
-
-        <div class="instructions">
-            <h4>📝 使用方法</h4>
+        <div id="loading" class="loading">カレンダーを読み込み中...</div>
+        <div id="error" class="error-message" style="display: none;"></div>
+        
+        <!-- セットアップ説明 -->
+        <div id="setupInstructions" class="setup-instructions" style="display: none;">
+            <h3>🔧 セットアップ手順</h3>
             <ol>
-                <li><strong>カレンダーIDを取得：</strong> Googleカレンダーの設定 → 共有するカレンダーを選択 → 「カレンダーの統合」からカレンダーIDをコピー</li>
-                <li><strong>公開設定：</strong> カレンダーを「一般公開」に設定する必要があります</li>
-                <li><strong>カレンダーIDを入力：</strong> 上記のフィールドにIDを貼り付け</li>
-                <li><strong>表示：</strong> 「カレンダーを表示」ボタンをクリック</li>
-                <li><strong>Notionに埋め込み：</strong> このページのURLをNotionの「/embed」コマンドで埋め込み</li>
+                <li><strong>APIキーを取得:</strong> <a href="https://console.cloud.google.com/" target="_blank" style="color: #ecf0f1;">Google Cloud Console</a> でGoogle Calendar APIを有効化し、APIキーを作成</li>
+                <li><strong>APIキー制限:</strong> HTTPリファラーに以下を追加:
+                    <br><code>https://ame-chapchap.github.io/*</code>
+                    <br><code>http://localhost:*</code> (テスト用)
+                </li>
+                <li><strong>カレンダー公開:</strong> Google Calendarで対象カレンダーを一般公開に設定</li>
+                <li><strong>コード更新:</strong> <code>apiKey</code> 変数に取得したAPIキーを設定</li>
             </ol>
+            
+            <h3>🧪 ブラウザでの直接テスト</h3>
+            <p>以下のリンクをクリックして、ブラウザで直接APIにアクセスできるかテストしてください：</p>
+            <p><a href="https://www.googleapis.com/calendar/v3/calendars/isalang.2ain@gmail.com?key=AIzaSyD7nOJVgpjuqu6-LjXDq7UNRBUGcCT3dDE" target="_blank" style="color: #ecf0f1; word-break: break-all;">
+                📅 カレンダー情報を取得
+            </a></p>
+            <p><a href="https://www.googleapis.com/calendar/v3/calendars/isalang.2ain@gmail.com/events?key=AIzaSyD7nOJVgpjuqu6-LjXDq7UNRBUGcCT3dDE" target="_blank" style="color: #ecf0f1; word-break: break-all;">
+                📋 イベント一覧を取得
+            </a></p>
+            <p><small>※ このリンクで JSON データが表示されれば API は正常に動作しています</small></p>
+        </div>
+
+        <div id="monthView" class="calendar-view active">
+            <div class="calendar-grid" id="calendarGrid">
+                <!-- カレンダーグリッドがここに生成されます -->
+            </div>
+        </div>
+
+        <div id="weekView" class="week-view">
+            <div id="weekContainer">
+                <!-- 週表示がここに生成されます -->
+            </div>
+        </div>
+
+        <div id="agendaView" class="agenda-view">
+            <div id="agendaContainer">
+                <!-- 予定表示がここに生成されます -->
+            </div>
         </div>
     </div>
 
+    <div id="tooltip" class="tooltip"></div>
+
     <script>
-        let currentView = 'MONTH';
-        let setupVisible = false;
-
-        // ビュー選択
-        document.querySelectorAll('.view-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentView = btn.dataset.view;
-            });
-        });
-
-        function showError(message) {
-            const errorEl = document.getElementById('error-message');
-            errorEl.textContent = message;
-            errorEl.style.display = 'block';
+        // API設定
+        let apiKey = 'AIzaSyD7nOJVgpjuqu6-LjXDq7UNRBUGcCT3dDE';
+        const calendarId = 'isalang.2ain@gmail.com';
+        
+        // APIキー検証
+        function validateApiKey() {
+            if (apiKey === 'YOUR_API_KEY_HERE' || !apiKey || apiKey.length < 30) {
+                showError('APIキーが設定されていません。正しいAPIキーを設定してください。');
+                return false;
+            }
+            return true;
         }
 
-        function hideError() {
-            document.getElementById('error-message').style.display = 'none';
-        }
-
-        function loadCalendar() {
-            const calendarId = document.getElementById('calendar-id').value.trim();
+        // API接続テスト関数
+        async function testApiConnection() {
+            console.log('🔍 API接続をテスト中...');
+            showError('🔍 API接続をテスト中...');
             
-            if (!calendarId) {
-                showError('カレンダーIDを入力してください。');
+            if (!validateApiKey()) {
                 return;
             }
 
-            hideError();
+            try {
+                // まずカレンダー自体にアクセスできるかテスト
+                const testUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}?key=${apiKey}`;
+                console.log('📍 テストURL:', testUrl);
+                
+                const response = await fetch(testUrl);
+                const responseText = await response.text();
+                
+                console.log('📡 レスポンス状況:', response.status);
+                console.log('📄 レスポンス内容:', responseText);
 
-            // Googleカレンダーの埋め込みURL生成
-            const baseUrl = 'https://calendar.google.com/calendar/embed';
+                if (response.ok) {
+                    const data = JSON.parse(responseText);
+                    showError(`✅ API接続成功！<br>📅 カレンダー名: ${data.summary || 'N/A'}<br>📧 カレンダーID: ${data.id}<br>🌐 タイムゾーン: ${data.timeZone || 'N/A'}`);
+                    
+                    // 成功したらイベントも取得してみる
+                    setTimeout(loadCalendar, 2000);
+                } else {
+                    let errorMsg = `❌ API接続失敗 (ステータス: ${response.status})<br>`;
+                    
+                    try {
+                        const errorData = JSON.parse(responseText);
+                        if (errorData.error) {
+                            errorMsg += `📝 エラー詳細: ${errorData.error.message}<br>`;
+                            
+                            if (response.status === 403) {
+                                errorMsg += `<br>🔧 対処法:<br>`;
+                                errorMsg += `1. Google Cloud Consoleでカレンダーがアクセス可能か確認<br>`;
+                                errorMsg += `2. APIキーの制限設定を確認<br>`;
+                                errorMsg += `3. カレンダーが一般公開されているか確認`;
+                            } else if (response.status === 404) {
+                                errorMsg += `<br>🔧 カレンダーID "${calendarId}" が見つかりません<br>`;
+                                errorMsg += `正しいカレンダーIDを設定してください`;
+                            }
+                        }
+                    } catch (e) {
+                        errorMsg += `📝 レスポンス: ${responseText.substring(0, 200)}`;
+                    }
+                    
+                    showError(errorMsg);
+                }
+            } catch (error) {
+                console.error('❌ ネットワークエラー:', error);
+                showError(`❌ ネットワークエラー: ${error.message}<br>インターネット接続を確認してください。`);
+            }
+        }
+
+        // 現在の状態
+        let currentDate = new Date();
+        let currentView = 'month';
+        let events = [];
+
+        // 日本語の月名と曜日
+        const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+        const dayNames = ['月', '火', '水', '木', '金', '土', '日'];
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCalendar();
+        });
+
+        // Google Calendar API からイベントを取得
+        async function fetchEvents(startDate, endDate) {
+            // APIキー検証
+            if (!validateApiKey()) {
+                return [];
+            }
+
+            const timeMin = startDate.toISOString();
+            const timeMax = endDate.toISOString();
+            
             const params = new URLSearchParams({
-                src: calendarId,
-                ctz: 'Asia/Tokyo',
-                mode: currentView,
-                showTitle: '0',
-                showPrint: '0',
-                showCalendars: '0',
-                showTz: '0',
-                bgcolor: '%23ffffff'
+                key: apiKey,
+                timeMin: timeMin,
+                timeMax: timeMax,
+                singleEvents: true,
+                orderBy: 'startTime'
             });
 
-            // ビューに応じた追加パラメータ
-            if (currentView === 'WEEK') {
-                params.append('view', 'week');
-            } else if (currentView === 'AGENDA') {
-                params.append('view', 'agenda');
-            }
-
-            const embedUrl = `${baseUrl}?${params.toString()}`;
-            
-            const iframe = document.getElementById('calendar-frame');
-            iframe.src = embedUrl;
-            iframe.style.display = 'block';
-
-            // エラーハンドリング
-            iframe.onload = function() {
-                console.log('カレンダーが正常に読み込まれました');
-            };
-
-            iframe.onerror = function() {
-                showError('カレンダーの読み込みに失敗しました。カレンダーIDと公開設定を確認してください。');
-                iframe.style.display = 'none';
-            };
-        }
-
-        function toggleSetup() {
-            const setupSection = document.querySelector('.setup-section');
-            const button = event.target;
-            
-            if (setupVisible) {
-                setupSection.style.display = 'none';
-                button.textContent = '設定を表示';
-                setupVisible = false;
-            } else {
-                setupSection.style.display = 'block';
-                button.textContent = '設定を隠す';
-                setupVisible = true;
-            }
-        }
-
-        // URLパラメータからカレンダーIDを自動取得
-        function loadFromParams() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const calendarId = urlParams.get('calendar');
-            const view = urlParams.get('view');
-            
-            if (calendarId) {
-                document.getElementById('calendar-id').value = calendarId;
-            }
-            
-            if (view && ['MONTH', 'WEEK', 'AGENDA'].includes(view.toUpperCase())) {
-                currentView = view.toUpperCase();
-                document.querySelectorAll('.view-btn').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.view === currentView);
-                });
-            }
-            
-            // パラメータがある場合は自動読み込み
-            if (calendarId) {
-                setTimeout(() => {
-                    loadCalendar();
-                    if (urlParams.get('hideSetup') === 'true') {
-                        toggleSetup();
+            try {
+                const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`;
+                console.log('API URL:', url); // デバッグ用
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    console.error('API Response:', response.status, errorData);
+                    
+                    if (response.status === 403) {
+                        throw new Error('APIキーまたはカレンダーへのアクセス権限がありません。APIキーの制限設定とカレンダーの公開設定を確認してください。');
+                    } else if (response.status === 404) {
+                        throw new Error('カレンダーが見つかりません。カレンダーIDを確認してください。');
+                    } else if (response.status === 400) {
+                        throw new Error('リクエストが無効です。APIキーまたはパラメータを確認してください。');
+                    } else {
+                        throw new Error(`API エラー: ${response.status} ${response.statusText}`);
                     }
-                }, 500);
+                }
+
+                const data = await response.json();
+                console.log('取得したイベント数:', data.items ? data.items.length : 0); // デバッグ用
+                return data.items || [];
+            } catch (error) {
+                console.error('イベント取得エラー:', error);
+                showError(`❌ ${error.message}`);
+                return [];
             }
         }
 
-        // ページ読み込み時にパラメータをチェック
-        document.addEventListener('DOMContentLoaded', function() {
-            loadFromParams();
-            
-            // パラメータがない場合でも、デフォルトのカレンダーを表示
-            const urlParams = new URLSearchParams(window.location.search);
-            const calendarId = urlParams.get('calendar');
-            
-            if (!calendarId) {
-                // デフォルトカレンダーを自動読み込み
-                setTimeout(() => {
-                    loadCalendar();
-                }, 500);
-            }
-        });
+        // カレンダーを読み込み
+        async function loadCalendar() {
+            showLoading(true);
+            hideError();
 
-        // Enterキーでカレンダー読み込み
-        document.getElementById('calendar-id').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                loadCalendar();
+            const startDate = getCalendarStartDate(currentDate);
+            const endDate = getCalendarEndDate(currentDate);
+
+            events = await fetchEvents(startDate, endDate);
+            
+            showLoading(false);
+            updateDisplay();
+        }
+
+        // カレンダーの開始日を取得（月曜始まり）
+        function getCalendarStartDate(date) {
+            const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+            const dayOfWeek = firstDay.getDay();
+            const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            const startDate = new Date(firstDay);
+            startDate.setDate(firstDay.getDate() - mondayOffset);
+            return startDate;
+        }
+
+        // カレンダーの終了日を取得
+        function getCalendarEndDate(date) {
+            const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+            const dayOfWeek = lastDay.getDay();
+            const sundayOffset = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+            const endDate = new Date(lastDay);
+            endDate.setDate(lastDay.getDate() + sundayOffset);
+            return endDate;
+        }
+
+        // 表示を更新
+        function updateDisplay() {
+            updateMonthYear();
+            
+            if (currentView === 'month') {
+                generateMonthView();
+            } else if (currentView === 'week') {
+                generateWeekView();
+            } else if (currentView === 'agenda') {
+                generateAgendaView();
             }
-        });
+        }
+
+        // 月年表示を更新
+        function updateMonthYear() {
+            const monthYear = document.getElementById('monthYear');
+            monthYear.textContent = `${currentDate.getFullYear()}年 ${monthNames[currentDate.getMonth()]}`;
+        }
+
+        // 月表示を生成
+        function generateMonthView() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            // 曜日ヘッダー
+            dayNames.forEach(day => {
+                const headerCell = document.createElement('div');
+                headerCell.className = 'calendar-header-cell';
+                headerCell.textContent = day;
+                grid.appendChild(headerCell);
+            });
+
+            // カレンダー日付セル
+            const startDate = getCalendarStartDate(currentDate);
+            const today = new Date();
+
+            for (let i = 0; i < 42; i++) {
+                const cellDate = new Date(startDate);
+                cellDate.setDate(startDate.getDate() + i);
+
+                const cell = document.createElement('div');
+                cell.className = 'calendar-cell';
+                
+                if (cellDate.getMonth() !== currentDate.getMonth()) {
+                    cell.className += ' other-month';
+                }
+                
+                if (isSameDay(cellDate, today)) {
+                    cell.className += ' today';
+                }
+
+                const dateNumber = document.createElement('div');
+                dateNumber.className = 'date-number';
+                dateNumber.textContent = cellDate.getDate();
+                cell.appendChild(dateNumber);
+
+                // その日のイベントを追加
+                const dayEvents = getEventsForDate(cellDate);
+                dayEvents.forEach(event => {
+                    const eventDiv = createEventElement(event, 'month');
+                    cell.appendChild(eventDiv);
+                });
+
+                grid.appendChild(cell);
+            }
+        }
+
+        // 週表示を生成
+        function generateWeekView() {
+            const container = document.getElementById('weekContainer');
+            container.innerHTML = '';
+
+            const startOfWeek = getStartOfWeek(currentDate);
+
+            for (let i = 0; i < 7; i++) {
+                const day = new Date(startOfWeek);
+                day.setDate(startOfWeek.getDate() + i);
+
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'week-day';
+
+                const header = document.createElement('div');
+                header.className = 'week-day-header';
+                header.textContent = `${day.getDate()}日 (${dayNames[i]})`;
+                dayDiv.appendChild(header);
+
+                const dayEvents = getEventsForDate(day);
+                dayEvents.forEach(event => {
+                    const eventDiv = createEventElement(event, 'week');
+                    dayDiv.appendChild(eventDiv);
+                });
+
+                container.appendChild(dayDiv);
+            }
+        }
+
+        // 予定表示を生成
+        function generateAgendaView() {
+            const container = document.getElementById('agendaContainer');
+            container.innerHTML = '';
+
+            const monthEvents = getEventsForMonth(currentDate);
+            const eventsByDate = groupEventsByDate(monthEvents);
+
+            Object.keys(eventsByDate).sort().forEach(dateStr => {
+                const date = new Date(dateStr);
+                const dateHeader = document.createElement('div');
+                dateHeader.className = 'agenda-date';
+                dateHeader.textContent = `${date.getDate()}日 (${dayNames[date.getDay() === 0 ? 6 : date.getDay() - 1]})`;
+                container.appendChild(dateHeader);
+
+                eventsByDate[dateStr].forEach(event => {
+                    const eventDiv = createEventElement(event, 'agenda');
+                    eventDiv.className = 'agenda-event';
+                    container.appendChild(eventDiv);
+                });
+            });
+        }
+
+        // イベント要素を作成
+        function createEventElement(event, viewType) {
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'event';
+
+            const startTime = new Date(event.start.dateTime || event.start.date);
+            const endTime = new Date(event.end.dateTime || event.end.date);
+
+            let timeStr = '';
+            if (event.start.dateTime) {
+                timeStr = formatTime(startTime);
+            }
+
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'event-time';
+            timeSpan.textContent = timeStr;
+
+            const titleSpan = document.createElement('span');
+            titleSpan.className = 'event-title';
+            
+            let title = event.summary || '無題';
+            // 改行が含まれる場合は最初の行のみ
+            title = title.split('\n')[0];
+            
+            // 長いタイトルを切り詰め
+            const maxLength = viewType === 'month' ? (window.innerWidth <= 480 ? 8 : 12) : 50;
+            if (title.length > maxLength) {
+                titleSpan.textContent = title.substring(0, maxLength) + '...';
+                // ツールチップ用の完全タイトルを保存
+                eventDiv.setAttribute('data-full-title', event.summary || '無題');
+            } else {
+                titleSpan.textContent = title;
+            }
+
+            eventDiv.appendChild(timeSpan);
+            eventDiv.appendChild(titleSpan);
+
+            // ツールチップイベント
+            if (eventDiv.getAttribute('data-full-title')) {
+                eventDiv.addEventListener('mouseenter', showTooltip);
+                eventDiv.addEventListener('mouseleave', hideTooltip);
+                eventDiv.addEventListener('mousemove', moveTooltip);
+            }
+
+            return eventDiv;
+        }
+
+        // 指定日のイベントを取得
+        function getEventsForDate(date) {
+            return events.filter(event => {
+                const eventStart = new Date(event.start.dateTime || event.start.date);
+                return isSameDay(eventStart, date);
+            });
+        }
+
+        // 指定月のイベントを取得
+        function getEventsForMonth(date) {
+            return events.filter(event => {
+                const eventStart = new Date(event.start.dateTime || event.start.date);
+                return eventStart.getMonth() === date.getMonth() && 
+                       eventStart.getFullYear() === date.getFullYear();
+            });
+        }
+
+        // イベントを日付でグループ化
+        function groupEventsByDate(events) {
+            const grouped = {};
+            events.forEach(event => {
+                const eventDate = new Date(event.start.dateTime || event.start.date);
+                const dateStr = eventDate.toDateString();
+                if (!grouped[dateStr]) {
+                    grouped[dateStr] = [];
+                }
+                grouped[dateStr].push(event);
+            });
+            return grouped;
+        }
+
+        // 週の開始日を取得（月曜日）
+        function getStartOfWeek(date) {
+            const result = new Date(date);
+            const dayOfWeek = result.getDay();
+            const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            result.setDate(result.getDate() - diff);
+            return result;
+        }
+
+        // 同じ日かチェック
+        function isSameDay(date1, date2) {
+            return date1.getDate() === date2.getDate() &&
+                   date1.getMonth() === date2.getMonth() &&
+                   date1.getFullYear() === date2.getFullYear();
+        }
+
+        // 時刻をフォーマット
+        function formatTime(date) {
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
+        // ナビゲーション関数
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            loadCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            loadCalendar();
+        }
+
+        function goToToday() {
+            currentDate = new Date();
+            loadCalendar();
+        }
+
+        // ビュー切替
+        function switchView(view) {
+            currentView = view;
+            
+            // アクティブボタンを更新
+            document.querySelectorAll('.view-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // ビューを切り替え
+            document.querySelectorAll('.calendar-view, .week-view, .agenda-view').forEach(div => {
+                div.classList.remove('active');
+            });
+
+            if (view === 'month') {
+                document.getElementById('monthView').classList.add('active');
+            } else if (view === 'week') {
+                document.getElementById('weekView').classList.add('active');
+            } else if (view === 'agenda') {
+                document.getElementById('agendaView').classList.add('active');
+            }
+
+            updateDisplay();
+        }
+
+        // ローディング表示
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // エラー表示
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.innerHTML = message;
+            errorDiv.style.display = 'block';
+            
+            // APIキー関連のエラーの場合、セットアップ説明を表示
+            if (message.includes('APIキー') || message.includes('API エラー') || message.includes('アクセス権限')) {
+                document.getElementById('setupInstructions').style.display = 'block';
+            }
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('setupInstructions').style.display = 'none';
+        }
+
+        // ツールチップ機能
+        function showTooltip(event) {
+            const tooltip = document.getElementById('tooltip');
+            const fullTitle = event.currentTarget.getAttribute('data-full-title');
+            tooltip.textContent = fullTitle;
+            tooltip.classList.add('show');
+        }
+
+        function hideTooltip(event) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.classList.remove('show');
+        }
+
+        function moveTooltip(event) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.left = (event.pageX + 10) + 'px';
+            tooltip.style.top = (event.pageY - 30) + 'px';
+        }
     </script>
 </body>
 </html>
