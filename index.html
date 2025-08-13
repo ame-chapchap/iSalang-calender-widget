@@ -20,12 +20,14 @@
 
         .calendar-container {
             width: 100%;
-            max-width: 900px;
-            margin: 20px auto;
+            max-width: none;
+            margin: 0;
             padding: 20px;
             background: linear-gradient(135deg, #e8f4f8 0%, #f0f8e8 100%);
             border-radius: 20px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            min-height: 100vh;
+            box-sizing: border-box;
         }
 
         .calendar-header {
@@ -175,7 +177,7 @@
         }
 
         .event {
-            background: #42a5f5;
+            background: rgba(66, 165, 245, 0.7);
             color: white;
             padding: 2px 4px;
             border-radius: 3px;
@@ -184,6 +186,9 @@
             overflow: hidden;
             cursor: pointer;
             transition: opacity 0.2s ease;
+            margin: 1px 0;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .event:hover {
@@ -198,6 +203,9 @@
         .event-title {
             font-size: 10px;
             opacity: 0.95;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .loading {
@@ -330,6 +338,7 @@
             </div>
             <div class="view-toggle">
                 <button class="view-btn active" onclick="switchView('month')">月</button>
+                <button class="view-btn" onclick="switchView('week')">週</button>
                 <button class="view-btn" onclick="switchView('agenda')">予定</button>
             </div>
         </div>
@@ -374,11 +383,108 @@
             });
             event.target.classList.add('active');
             
+            const grid = document.getElementById('calendar-grid');
+            
             if (view === 'month') {
+                // 月表示のスタイルをリセット
+                grid.style.display = 'grid';
+                grid.style.gridTemplateColumns = 'repeat(7, 1fr)';
                 renderCalendar();
+            } else if (view === 'week') {
+                // 週表示（簡易版）
+                grid.style.display = 'block';
+                grid.style.gridTemplateColumns = 'none';
+                renderWeekView();
             } else {
                 renderAgenda();
             }
+        }
+        
+        function renderWeekView() {
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+            
+            // 今週の開始日を取得（月曜日開始）
+            const today = new Date();
+            const dayOfWeek = (today.getDay() + 6) % 7; // 月曜日を0にする
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - dayOfWeek);
+            
+            const weekContainer = document.createElement('div');
+            weekContainer.style.padding = '20px';
+            
+            // 週の日付を表示
+            for (let i = 0; i < 7; i++) {
+                const dayDate = new Date(weekStart);
+                dayDate.setDate(weekStart.getDate() + i);
+                
+                const dayEl = document.createElement('div');
+                dayEl.style.cssText = `
+                    margin-bottom: 16px;
+                    background: rgba(255, 255, 255, 0.9);
+                    border-radius: 8px;
+                    padding: 12px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                `;
+                
+                // 日付ヘッダー
+                const dayHeader = document.createElement('div');
+                dayHeader.style.cssText = `
+                    font-weight: 600;
+                    font-size: 16px;
+                    margin-bottom: 8px;
+                    color: #495057;
+                    border-bottom: 1px solid #e9ecef;
+                    padding-bottom: 8px;
+                `;
+                dayHeader.textContent = `${dayDate.getMonth() + 1}/${dayDate.getDate()} (${['日','月','火','水','木','金','土'][dayDate.getDay()]})`;
+                
+                // この日のイベント
+                const dayEvents = getDayEvents(dayDate);
+                
+                dayEl.appendChild(dayHeader);
+                
+                if (dayEvents.length === 0) {
+                    const noEvent = document.createElement('div');
+                    noEvent.style.color = '#adb5bd';
+                    noEvent.style.fontStyle = 'italic';
+                    noEvent.textContent = '予定なし';
+                    dayEl.appendChild(noEvent);
+                } else {
+                    dayEvents.forEach(event => {
+                        const eventEl = document.createElement('div');
+                        eventEl.style.cssText = `
+                            padding: 8px;
+                            margin: 4px 0;
+                            background: rgba(66, 165, 245, 0.1);
+                            border-left: 3px solid rgba(66, 165, 245, 0.7);
+                            border-radius: 4px;
+                        `;
+                        
+                        let timeStr = '';
+                        if (event.start.dateTime) {
+                            const startTime = new Date(event.start.dateTime);
+                            timeStr = startTime.toLocaleTimeString('ja-JP', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                            });
+                        }
+                        
+                        const title = (event.summary || '予定').split('\n')[0];
+                        
+                        eventEl.innerHTML = `
+                            ${timeStr ? `<div style="font-size: 14px; font-weight: 600; color: rgba(66, 165, 245, 0.9);">${timeStr}</div>` : ''}
+                            <div style="font-size: 14px; color: #37352f; margin-top: 2px;">${title}</div>
+                        `;
+                        
+                        dayEl.appendChild(eventEl);
+                    });
+                }
+                
+                weekContainer.appendChild(dayEl);
+            }
+            
+            grid.appendChild(weekContainer);
         }
 
         function changeMonth(delta) {
@@ -567,11 +673,86 @@
         function renderAgenda() {
             const grid = document.getElementById('calendar-grid');
             grid.innerHTML = '';
+            grid.style.display = 'block';
+            grid.style.gridTemplateColumns = 'none';
             
-            // 予定一覧の実装（簡略版）
+            // 今月のイベントを日付順にソート
+            const monthEvents = events.filter(event => {
+                const eventDate = new Date(event.start.dateTime || event.start.date);
+                return eventDate.getMonth() === currentDate.getMonth() && 
+                       eventDate.getFullYear() === currentDate.getFullYear();
+            }).sort((a, b) => {
+                const dateA = new Date(a.start.dateTime || a.start.date);
+                const dateB = new Date(b.start.dateTime || b.start.date);
+                return dateA - dateB;
+            });
+            
+            if (monthEvents.length === 0) {
+                const noEvents = document.createElement('div');
+                noEvents.style.padding = '40px 20px';
+                noEvents.style.textAlign = 'center';
+                noEvents.style.color = '#6b6866';
+                noEvents.textContent = 'この月には予定がありません';
+                grid.appendChild(noEvents);
+                return;
+            }
+            
+            // 予定一覧を作成
             const agendaContainer = document.createElement('div');
             agendaContainer.style.padding = '20px';
-            agendaContainer.innerHTML = '<p>予定一覧表示（実装中）</p>';
+            
+            monthEvents.forEach(event => {
+                const eventItem = document.createElement('div');
+                eventItem.style.cssText = `
+                    display: flex;
+                    align-items: center;
+                    padding: 12px;
+                    margin-bottom: 8px;
+                    background: rgba(255, 255, 255, 0.9);
+                    border-radius: 8px;
+                    border-left: 4px solid rgba(66, 165, 245, 0.7);
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                `;
+                
+                const eventDate = new Date(event.start.dateTime || event.start.date);
+                
+                // 日付部分
+                const dateEl = document.createElement('div');
+                dateEl.style.cssText = `
+                    min-width: 60px;
+                    text-align: center;
+                    margin-right: 16px;
+                    color: #495057;
+                `;
+                dateEl.innerHTML = `
+                    <div style="font-size: 18px; font-weight: 600;">${eventDate.getDate()}</div>
+                    <div style="font-size: 12px;">${['日','月','火','水','木','金','土'][eventDate.getDay()]}</div>
+                `;
+                
+                // 時間とタイトル部分
+                const contentEl = document.createElement('div');
+                contentEl.style.flex = '1';
+                
+                let timeStr = '';
+                if (event.start.dateTime) {
+                    timeStr = eventDate.toLocaleTimeString('ja-JP', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                }
+                
+                const title = (event.summary || '予定').split('\n')[0]; // 最初の行のみ
+                
+                contentEl.innerHTML = `
+                    ${timeStr ? `<div style="font-size: 14px; font-weight: 600; color: rgba(66, 165, 245, 0.9); margin-bottom: 4px;">${timeStr}</div>` : ''}
+                    <div style="font-size: 16px; color: #37352f;">${title}</div>
+                `;
+                
+                eventItem.appendChild(dateEl);
+                eventItem.appendChild(contentEl);
+                agendaContainer.appendChild(eventItem);
+            });
+            
             grid.appendChild(agendaContainer);
         }
 
