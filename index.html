@@ -38,6 +38,9 @@
             font-size: 24px;
             font-weight: 600;
             color: #37352f;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .view-toggle {
@@ -57,12 +60,17 @@
             font-size: 14px;
             font-weight: 500;
             transition: all 0.2s ease;
+            color: #6b6866;
         }
 
         .view-btn.active {
             background: #ffffff;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             color: #37352f;
+        }
+
+        .view-btn:hover:not(.active) {
+            background: rgba(255,255,255,0.5);
         }
 
         .calendar-frame {
@@ -72,6 +80,7 @@
             overflow: hidden;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             background: #ffffff;
+            position: relative;
         }
 
         .calendar-iframe {
@@ -81,56 +90,26 @@
             display: block;
         }
 
-        .setup-instructions {
-            margin-top: 20px;
-            padding: 16px;
-            background: #f7f6f3;
-            border-radius: 8px;
-            border-left: 4px solid #2eaadc;
-        }
-
-        .setup-instructions h3 {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: #37352f;
-        }
-
-        .setup-instructions ol {
-            margin-left: 16px;
-            color: #6b6866;
-        }
-
-        .setup-instructions li {
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .calendar-url-input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #e9e7e4;
-            border-radius: 6px;
-            font-size: 14px;
-            margin: 12px 0;
-            font-family: 'SF Mono', Monaco, Consolas, monospace;
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #6b6866;
+            z-index: 10;
+            opacity: 1;
+            transition: opacity 0.3s ease;
         }
 
-        .update-btn {
-            background: #2eaadc;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 14px;
-            transition: background 0.2s ease;
-        }
-
-        .update-btn:hover {
-            background: #2596be;
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
 
         /* モバイル対応 */
@@ -155,6 +134,7 @@
             .view-btn {
                 flex: 1;
                 text-align: center;
+                padding: 10px 12px;
             }
 
             .calendar-iframe {
@@ -167,8 +147,13 @@
                 height: 450px;
             }
             
-            .setup-instructions {
-                padding: 12px;
+            .calendar-title {
+                font-size: 18px;
+            }
+
+            .view-btn {
+                padding: 8px 10px;
+                font-size: 13px;
             }
         }
 
@@ -182,49 +167,73 @@
                 height: 400px;
             }
         }
+
+        /* ダークモード対応 */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #2f3437;
+                color: #e9e7e4;
+            }
+
+            .calendar-title {
+                color: #e9e7e4;
+            }
+
+            .view-toggle {
+                background: #37352f;
+            }
+
+            .view-btn {
+                color: #9b9a97;
+            }
+
+            .view-btn.active {
+                background: #37352f;
+                color: #e9e7e4;
+            }
+
+            .calendar-frame {
+                border-color: #37352f;
+                background: #37352f;
+            }
+
+            .loading-overlay {
+                background: #37352f;
+                color: #9b9a97;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="calendar-container">
         <div class="calendar-header">
-            <h1 class="calendar-title">📅 カレンダー</h1>
+            <h1 class="calendar-title">
+                <span>📅</span>
+                <span>カレンダー</span>
+            </h1>
             <div class="view-toggle">
-                <button class="view-btn active" onclick="switchView('month')">月表示</button>
-                <button class="view-btn" onclick="switchView('week')">週表示</button>
-                <button class="view-btn" onclick="switchView('agenda')">予定一覧</button>
+                <button class="view-btn active" onclick="switchView('month')" title="月表示">月</button>
+                <button class="view-btn" onclick="switchView('week')" title="週表示">週</button>
+                <button class="view-btn" onclick="switchView('agenda')" title="予定一覧">予定</button>
             </div>
         </div>
 
         <div class="calendar-frame">
-            <iframe id="calendar-iframe" class="calendar-iframe"
-                src="https://calendar.google.com/calendar/embed?height=600&wkst=1&bgcolor=%23ffffff&ctz=Asia%2FTokyo&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&mode=MONTH"
-                scrolling="no">
+            <div class="loading-overlay" id="loading">
+                📅 カレンダーを読み込み中...
+            </div>
+            <iframe id="calendar-iframe" 
+                    class="calendar-iframe"
+                    src="https://calendar.google.com/calendar/embed?height=600&wkst=1&bgcolor=%23ffffff&ctz=Asia%2FSeoul&src=isalang.2ain%40gmail.com&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&mode=MONTH"
+                    scrolling="no"
+                    onload="hideLoading()">
             </iframe>
-        </div>
-
-        <div class="setup-instructions">
-            <h3>🔧 セットアップ方法</h3>
-            <ol>
-                <li>Googleカレンダーを開いて、共有したいカレンダーの設定へ</li>
-                <li>「統合カレンダー」→「埋め込みコード」をコピー</li>
-                <li>下の入力欄にsrc="..."の部分のURLを貼り付け</li>
-                <li>「更新」ボタンをクリック</li>
-                <li>このページ全体をNotionにEmbedとして貼り付け</li>
-            </ol>
-            
-            <input type="text" 
-                   id="calendar-url" 
-                   class="calendar-url-input"
-                   placeholder="https://calendar.google.com/calendar/embed?src=your-calendar-url"
-                   value="">
-            
-            <button class="update-btn" onclick="updateCalendar()">📅 カレンダーを更新</button>
         </div>
     </div>
 
     <script>
         let currentView = 'month';
-        let baseUrl = '';
+        const baseCalendarUrl = 'https://calendar.google.com/calendar/embed?height=600&wkst=1&bgcolor=%23ffffff&ctz=Asia%2FSeoul&src=isalang.2ain%40gmail.com&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0';
 
         function switchView(view) {
             currentView = view;
@@ -241,80 +250,47 @@
 
         function updateCalendarView() {
             const iframe = document.getElementById('calendar-iframe');
-            const currentSrc = iframe.src;
+            const loading = document.getElementById('loading');
             
-            // 現在のURLから基本部分を抽出
-            let newSrc = currentSrc.replace(/&mode=(MONTH|WEEK|AGENDA)/, '');
+            // ローディング表示
+            loading.classList.remove('hidden');
             
-            // 新しい表示モードを追加
-            const modeMap = {
-                'month': 'MONTH',
-                'week': 'WEEK', 
-                'agenda': 'AGENDA'
-            };
-            
-            newSrc += '&mode=' + modeMap[currentView];
-            iframe.src = newSrc;
-        }
-
-        function updateCalendar() {
-            const urlInput = document.getElementById('calendar-url');
-            const newUrl = urlInput.value.trim();
-            
-            if (!newUrl) {
-                alert('カレンダーURLを入力してください');
-                return;
-            }
-            
-            if (!newUrl.includes('calendar.google.com')) {
-                alert('GoogleカレンダーのURLを入力してください');
-                return;
-            }
-            
-            // URLをクリーンアップして埋め込み用に最適化
-            let embedUrl = newUrl;
-            
-            // 必要なパラメータを追加・調整
-            if (!embedUrl.includes('showTitle=0')) {
-                embedUrl += embedUrl.includes('?') ? '&showTitle=0' : '?showTitle=0';
-            }
-            if (!embedUrl.includes('showNav=1')) {
-                embedUrl += '&showNav=1';
-            }
-            if (!embedUrl.includes('showDate=1')) {
-                embedUrl += '&showDate=1';
-            }
-            if (!embedUrl.includes('showPrint=0')) {
-                embedUrl += '&showPrint=0';
-            }
-            if (!embedUrl.includes('showTabs=0')) {
-                embedUrl += '&showTabs=0';
-            }
-            if (!embedUrl.includes('showCalendars=0')) {
-                embedUrl += '&showCalendars=0';
-            }
-            
-            // 表示モードを現在の選択に合わせる
+            // 表示モードマッピング
             const modeMap = {
                 'month': 'MONTH',
                 'week': 'WEEK',
                 'agenda': 'AGENDA'
             };
             
-            embedUrl = embedUrl.replace(/&mode=(MONTH|WEEK|AGENDA)/, '');
-            embedUrl += '&mode=' + modeMap[currentView];
+            // 新しいURLを構築
+            const newSrc = baseCalendarUrl + '&mode=' + modeMap[currentView];
             
-            // iframeを更新
-            document.getElementById('calendar-iframe').src = embedUrl;
-            baseUrl = embedUrl;
-            
-            alert('カレンダーが更新されました！');
+            // iframeのsrcを更新
+            iframe.src = newSrc;
         }
 
-        // ページロード時の初期設定
+        function hideLoading() {
+            const loading = document.getElementById('loading');
+            setTimeout(() => {
+                loading.classList.add('hidden');
+            }, 500);
+        }
+
+        // ページロード時の初期化
         window.addEventListener('load', function() {
-            // デフォルトでデモ用のパブリックカレンダーを表示
-            // 実際の使用時は削除して、ユーザーのカレンダーURLに置き換え
+            // 初回ローディングを非表示
+            setTimeout(hideLoading, 1000);
+        });
+
+        // エラーハンドリング
+        window.addEventListener('error', function(e) {
+            console.log('Calendar widget error:', e);
+        });
+
+        // iframe エラーハンドリング
+        document.getElementById('calendar-iframe').addEventListener('error', function() {
+            const loading = document.getElementById('loading');
+            loading.innerHTML = '⚠️ カレンダーの読み込みに失敗しました';
         });
     </script>
 </body>
