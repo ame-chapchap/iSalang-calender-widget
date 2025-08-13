@@ -13,27 +13,28 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #e8f4f8 0%, #f0f8e8 100%);
+            background: #f8f9fa;
             color: #37352f;
             line-height: 1.5;
-            min-height: 100vh;
+            margin: 0;
+            padding: 0;
         }
 
         .calendar-container {
             width: 100%;
-            max-width: none;
-            margin: 0;
-            padding: 12px;
-            height: 90vh;
-            display: flex;
-            flex-direction: column;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #e8f4f8 0%, #f0f8e8 100%);
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
         .calendar-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             flex-wrap: wrap;
             gap: 12px;
         }
@@ -89,13 +90,11 @@
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
             position: relative;
-            flex: 1;
-            min-height: 0;
         }
 
         .calendar-iframe {
             width: 100%;
-            height: 100%;
+            height: 600px;
             border: none;
             display: block;
         }
@@ -125,8 +124,9 @@
         /* モバイル対応 */
         @media (max-width: 768px) {
             .calendar-container {
-                padding: 8px;
-                height: 85vh;
+                margin: 10px;
+                padding: 15px;
+                border-radius: 16px;
             }
 
             .calendar-title {
@@ -136,7 +136,7 @@
             .calendar-header {
                 flex-direction: column;
                 align-items: stretch;
-                margin-bottom: 8px;
+                margin-bottom: 12px;
             }
 
             .view-toggle {
@@ -149,9 +149,18 @@
                 padding: 4px 12px;
                 font-size: 13px;
             }
+
+            .calendar-iframe {
+                height: 500px;
+            }
         }
 
         @media (max-width: 480px) {
+            .calendar-container {
+                margin: 8px;
+                padding: 12px;
+            }
+
             .calendar-title {
                 font-size: 18px;
             }
@@ -160,12 +169,21 @@
                 padding: 3px 10px;
                 font-size: 12px;
             }
+
+            .calendar-iframe {
+                height: 450px;
+            }
         }
 
         /* Notion内での表示最適化 */
         @media (max-width: 400px) {
             .calendar-container {
-                padding: 6px;
+                margin: 6px;
+                padding: 10px;
+            }
+
+            .calendar-iframe {
+                height: 420px;
             }
         }
 
@@ -266,96 +284,106 @@
                 'agenda': 'AGENDA'
             };
             
+            // スマホの月表示では詳細表示パラメータを追加
+            let extraParams = '';
+            if (isMobile() && currentView === 'month') {
+                extraParams = '&showDetails=1&showEventDetails=1&showEventTime=1&eventDetailsLevel=2&details=1';
+            }
+            
             // 新しいURLを構築
-            const newSrc = baseCalendarUrl + '&mode=' + modeMap[currentView];
+            const newSrc = baseCalendarUrl + '&mode=' + modeMap[currentView] + extraParams;
             
             // iframeのsrcを更新
             iframe.src = newSrc;
             
-            // スマホの月表示の場合、ロード後にCSSを注入
-            if (isMobile() && currentView === 'month') {
-                iframe.onload = function() {
-                    setTimeout(() => {
-                        injectTimeHidingCSS();
-                        hideLoading();
-                    }, 1000);
-                };
-            } else {
-                iframe.onload = hideLoading;
-            }
+            // ロード完了時の処理
+            iframe.onload = function() {
+                setTimeout(() => {
+                    if (isMobile() && currentView === 'month') {
+                        enhanceEventDisplay();
+                    }
+                    hideLoading();
+                }, 1000);
+            };
         }
 
         function hideLoading() {
             const loading = document.getElementById('loading');
             setTimeout(() => {
                 loading.classList.add('hidden');
-                
-                // スマホの月表示で時間を隠すCSSを適用
-                if (isMobile() && currentView === 'month') {
-                    injectTimeHidingCSS();
-                }
             }, 500);
         }
 
-        function injectTimeHidingCSS() {
+        function enhanceEventDisplay() {
             try {
                 const iframe = document.getElementById('calendar-iframe');
                 if (iframe && iframe.contentDocument) {
                     const iframeDoc = iframe.contentDocument;
                     
                     // 既存のスタイルを削除
-                    const existingStyle = iframeDoc.getElementById('custom-time-hiding');
+                    const existingStyle = iframeDoc.getElementById('custom-event-enhance');
                     if (existingStyle) {
                         existingStyle.remove();
                     }
                     
-                    // 時間を隠すCSSを注入
+                    // イベント表示を改善するCSSを注入
                     const style = iframeDoc.createElement('style');
-                    style.id = 'custom-time-hiding';
+                    style.id = 'custom-event-enhance';
                     style.textContent = `
-                        /* 時間表示を隠す */
-                        .te-s,
-                        .te-t,
-                        .te-time,
-                        .event-time,
-                        .time,
-                        [class*="time"],
-                        span:not([class]):not([id]) {
-                            display: none !important;
-                        }
-                        
-                        /* イベントタイトルのみ表示 */
-                        .event-title,
-                        .event-summary,
-                        .te-summary,
+                        /* イベント表示の改善 */
                         .te,
+                        .event,
                         div[data-eventid] {
-                            display: block !important;
-                            font-size: 11px !important;
-                            line-height: 1.2 !important;
-                            overflow: hidden !important;
-                            text-overflow: ellipsis !important;
-                            white-space: nowrap !important;
+                            height: auto !important;
+                            min-height: 30px !important;
+                            padding: 2px !important;
+                            font-size: 10px !important;
+                            line-height: 1.1 !important;
+                            overflow: visible !important;
+                            white-space: normal !important;
+                            word-wrap: break-word !important;
                         }
                         
-                        /* セル内の余白調整 */
+                        /* セルの高さを調整 */
                         .te-c,
                         .calendar-cell,
                         td[class*="st-c"] {
+                            height: auto !important;
+                            min-height: 35px !important;
+                            vertical-align: top !important;
                             padding: 1px !important;
+                        }
+                        
+                        /* 時間とタイトルの表示改善 */
+                        .te-s,
+                        .te-t {
+                            display: block !important;
+                            font-size: 9px !important;
+                            line-height: 1.2 !important;
+                        }
+                        
+                        /* カレンダーグリッドの行高さ調整 */
+                        .wc-scrollable-grid tr {
+                            height: auto !important;
+                            min-height: 40px !important;
+                        }
+                        
+                        /* 月表示のセル調整 */
+                        .mv-daynames-container + * td {
+                            height: auto !important;
+                            min-height: 45px !important;
                         }
                     `;
                     
                     iframeDoc.head.appendChild(style);
                 }
             } catch (error) {
-                console.log('CSS injection failed:', error);
-                // フォールバック: 少し遅延してリトライ
+                console.log('Event display enhancement failed:', error);
                 setTimeout(() => {
                     try {
-                        injectTimeHidingCSS();
+                        enhanceEventDisplay();
                     } catch (e) {
-                        console.log('CSS injection retry failed:', e);
+                        console.log('Enhancement retry failed:', e);
                     }
                 }, 1000);
             }
@@ -369,13 +397,11 @@
             iframe.onload = function() {
                 setTimeout(() => {
                     if (isMobile() && currentView === 'month') {
-                        injectTimeHidingCSS();
+                        enhanceEventDisplay();
                     }
                     hideLoading();
                 }, 1000);
             };
-            
-            // 初回ローディングを非表示（iframe onloadで制御）
         });
 
         // エラーハンドリング
