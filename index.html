@@ -266,35 +266,116 @@
                 'agenda': 'AGENDA'
             };
             
-            // スマホの月表示ではタイトル優先設定
-            let extraParams = '';
-            if (isMobile() && currentView === 'month') {
-                extraParams = '&showCalendars=0&showTz=0&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&hl=ja&eventDisplay=block&eventDetails=1&eventTime=0';
-            }
-            
             // 新しいURLを構築
-            const newSrc = baseCalendarUrl + '&mode=' + modeMap[currentView] + extraParams;
+            const newSrc = baseCalendarUrl + '&mode=' + modeMap[currentView];
             
             // iframeのsrcを更新
             iframe.src = newSrc;
+            
+            // スマホの月表示の場合、ロード後にCSSを注入
+            if (isMobile() && currentView === 'month') {
+                iframe.onload = function() {
+                    setTimeout(() => {
+                        injectTimeHidingCSS();
+                        hideLoading();
+                    }, 1000);
+                };
+            } else {
+                iframe.onload = hideLoading;
+            }
         }
 
         function hideLoading() {
             const loading = document.getElementById('loading');
             setTimeout(() => {
                 loading.classList.add('hidden');
+                
+                // スマホの月表示で時間を隠すCSSを適用
+                if (isMobile() && currentView === 'month') {
+                    injectTimeHidingCSS();
+                }
             }, 500);
+        }
+
+        function injectTimeHidingCSS() {
+            try {
+                const iframe = document.getElementById('calendar-iframe');
+                if (iframe && iframe.contentDocument) {
+                    const iframeDoc = iframe.contentDocument;
+                    
+                    // 既存のスタイルを削除
+                    const existingStyle = iframeDoc.getElementById('custom-time-hiding');
+                    if (existingStyle) {
+                        existingStyle.remove();
+                    }
+                    
+                    // 時間を隠すCSSを注入
+                    const style = iframeDoc.createElement('style');
+                    style.id = 'custom-time-hiding';
+                    style.textContent = `
+                        /* 時間表示を隠す */
+                        .te-s,
+                        .te-t,
+                        .te-time,
+                        .event-time,
+                        .time,
+                        [class*="time"],
+                        span:not([class]):not([id]) {
+                            display: none !important;
+                        }
+                        
+                        /* イベントタイトルのみ表示 */
+                        .event-title,
+                        .event-summary,
+                        .te-summary,
+                        .te,
+                        div[data-eventid] {
+                            display: block !important;
+                            font-size: 11px !important;
+                            line-height: 1.2 !important;
+                            overflow: hidden !important;
+                            text-overflow: ellipsis !important;
+                            white-space: nowrap !important;
+                        }
+                        
+                        /* セル内の余白調整 */
+                        .te-c,
+                        .calendar-cell,
+                        td[class*="st-c"] {
+                            padding: 1px !important;
+                        }
+                    `;
+                    
+                    iframeDoc.head.appendChild(style);
+                }
+            } catch (error) {
+                console.log('CSS injection failed:', error);
+                // フォールバック: 少し遅延してリトライ
+                setTimeout(() => {
+                    try {
+                        injectTimeHidingCSS();
+                    } catch (e) {
+                        console.log('CSS injection retry failed:', e);
+                    }
+                }, 1000);
+            }
         }
 
         // ページロード時の初期化
         window.addEventListener('load', function() {
-            // 初回ローディングを非表示
-            setTimeout(hideLoading, 1000);
+            const iframe = document.getElementById('calendar-iframe');
             
-            // 初回表示時にスマホなら表示を調整
-            if (isMobile() && currentView === 'month') {
-                updateCalendarView();
-            }
+            // 初回ロード時の処理
+            iframe.onload = function() {
+                setTimeout(() => {
+                    if (isMobile() && currentView === 'month') {
+                        injectTimeHidingCSS();
+                    }
+                    hideLoading();
+                }, 1000);
+            };
+            
+            // 初回ローディングを非表示（iframe onloadで制御）
         });
 
         // エラーハンドリング
