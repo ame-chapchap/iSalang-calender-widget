@@ -117,7 +117,7 @@
         }
 
         .calendar-header-cell {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(200, 200, 200, 0.3);
             color: #2c3e50;
             text-align: center;
             padding: 15px 5px;
@@ -125,7 +125,7 @@
             font-size: 12px;
             border-radius: 10px;
             backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(200, 200, 200, 0.2);
         }
 
         .calendar-cell {
@@ -144,7 +144,7 @@
         }
 
         .calendar-cell.other-month {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(200, 200, 200, 0.2);
             color: #7f8c8d;
             opacity: 0.65;
         }
@@ -162,7 +162,7 @@
         }
 
         .calendar-cell.other-month:hover {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(200, 200, 200, 0.3);
             transform: scale(1.01);
             opacity: 0.8;
         }
@@ -550,52 +550,30 @@
             text-decoration: underline;
         }
 
-        .event-detail-value a:before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
 
-        .event-detail-value a:hover {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
-            text-decoration: none;
-        }
-
-        .event-detail-value a:hover:before {
-            left: 100%;
-        }
 
         .event-detail-value a[href*="zoom"] {
-            background: linear-gradient(135deg, #2d8cf0 0%, #1a73e8 100%);
-            box-shadow: 0 4px 15px rgba(45, 140, 240, 0.3);
+            color: #2d8cf0;
         }
 
         .event-detail-value a[href*="zoom"]:hover {
-            box-shadow: 0 6px 20px rgba(45, 140, 240, 0.4);
+            color: #1a73e8;
         }
 
         .event-detail-value a[href*="meet"] {
-            background: linear-gradient(135deg, #34a853 0%, #137333 100%);
-            box-shadow: 0 4px 15px rgba(52, 168, 83, 0.3);
+            color: #34a853;
         }
 
         .event-detail-value a[href*="meet"]:hover {
-            box-shadow: 0 6px 20px rgba(52, 168, 83, 0.4);
+            color: #137333;
         }
 
         .event-detail-value a[href*="teams"] {
-            background: linear-gradient(135deg, #6264a7 0%, #464775 100%);
-            box-shadow: 0 4px 15px rgba(98, 100, 167, 0.3);
+            color: #6264a7;
         }
 
         .event-detail-value a[href*="teams"]:hover {
-            box-shadow: 0 6px 20px rgba(98, 100, 167, 0.4);
+            color: #464775;
         }
 
         .event-detail-link {
