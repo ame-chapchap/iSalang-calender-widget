@@ -480,12 +480,20 @@
             }
             
             .calendar-grid {
-                min-width: 600px; /* スマホ用の最小幅 */
+                min-width: 750px; /* スマホ用の最小幅を増加 */
+                grid-template-columns: repeat(7, 105px); /* 固定幅でセル幅を明確に */
             }
             
             .calendar-cell {
                 min-height: 100px;
                 padding: 8px 6px;
+                min-width: 105px; /* セルの最小幅を明確に */
+                max-width: 105px; /* セルの最大幅も制限 */
+            }
+            
+            .calendar-header-cell {
+                min-width: 105px; /* ヘッダーセルも同じ幅に */
+                max-width: 105px;
             }
             
             .calendar-cell.other-month {
@@ -514,12 +522,22 @@
             }
             
             .calendar-grid {
-                min-width: 550px; /* さらに小さいスマホ用 */
+                min-width: 700px; /* さらに小さいスマホ用 */
+                grid-template-columns: repeat(7, 95px); /* より小さい固定幅 */
             }
             
             .calendar-cell {
                 min-height: 80px;
                 padding: 6px 4px;
+                min-width: 95px; /* セルの最小幅 */
+                max-width: 95px; /* セルの最大幅 */
+            }
+            
+            .calendar-header-cell {
+                min-width: 95px; /* ヘッダーセルも同じ幅に */
+                max-width: 95px;
+                padding: 12px 4px;
+                font-size: 12px;
             }
             
             .calendar-cell.other-month {
@@ -549,11 +567,6 @@
             
             .month-year {
                 font-size: 18px;
-            }
-            
-            .calendar-header-cell {
-                padding: 12px 4px;
-                font-size: 12px;
             }
             
             .calendar-header {
