@@ -769,6 +769,7 @@
             const sundayOffset = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
             const endDate = new Date(lastDay);
             endDate.setDate(lastDay.getDate() + sundayOffset);
+　　　　　　　endDate.setDate(endDate.getDate() + 1);
             return endDate;
         }
 
