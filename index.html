@@ -715,7 +715,21 @@
             const startDate = getCalendarStartDate(currentDate);
             const endDate = getCalendarEndDate(currentDate);
 
+            // デバッグ情報をコンソールに出力
+            console.log('=== カレンダー読み込み デバッグ情報 ===');
+            console.log('現在の月:', currentDate.getFullYear(), '年', currentDate.getMonth() + 1, '月');
+            console.log('取得範囲:', startDate.toISOString(), '～', endDate.toISOString());
+            console.log('取得範囲 (ローカル時間):', startDate.toLocaleString(), '～', endDate.toLocaleString());
+
             events = await fetchEvents(startDate, endDate);
+            
+            // 取得したイベントの日付範囲をチェック
+            if (events.length > 0) {
+                const eventDates = events.map(event => new Date(event.start.dateTime || event.start.date));
+                const minEventDate = new Math.min(...eventDates);
+                const maxEventDate = new Math.max(...eventDates);
+                console.log('取得したイベントの日付範囲:', new Date(minEventDate).toLocaleString(), '～', new Date(maxEventDate).toLocaleString());
+            }
             
             showLoading(false);
             updateDisplay();
