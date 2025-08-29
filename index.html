@@ -717,6 +717,19 @@
 
             events = await fetchEvents(startDate, endDate);
             
+            // 月末近くのイベントをデバッグ
+            if (events.length > 0) {
+                console.log('月末近くのイベントチェック:');
+                const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+                events.forEach(event => {
+                    const eventDate = new Date(event.start.dateTime);
+                    const eventDay = eventDate.getDate();
+                    if (eventDay >= monthEnd.getDate() - 3) { // 月末3日前から
+                        console.log(`${eventDate.toLocaleString()}: ${event.summary}`);
+                    }
+                });
+            }
+            
             showLoading(false);
             updateDisplay();
         }
